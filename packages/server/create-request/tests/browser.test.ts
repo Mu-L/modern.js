@@ -43,6 +43,32 @@ describe('configure', () => {
     expect(data).toStrictEqual(response);
   });
 
+  test('query should support array', async () => {
+    nock(url)
+      .get(path)
+      .query({
+        users: ['foo', 'bar'],
+      })
+      .reply(200, response);
+
+    const customRequest = jest.fn((requestPath: RequestInfo) => {
+      const finalUrl = `${url}${requestPath as string}`;
+      return fetch(finalUrl);
+    });
+
+    configure({ request: customRequest });
+    const request = createRequest(path, method, 8080, undefined);
+    const res = await request({
+      query: {
+        users: ['foo', 'bar'],
+      },
+    });
+    const data = await res.json();
+
+    expect(res instanceof Response).toBe(true);
+    expect(data).toStrictEqual(response);
+  });
+
   test('should support interceptor', async () => {
     nock(url).get(path).reply(200, response);
 
@@ -80,6 +106,44 @@ describe('configure', () => {
 
     expect(interceptor).toHaveBeenCalledTimes(0);
     expect(customRequest).toHaveBeenCalledTimes(1);
+    expect(res instanceof Response).toBe(true);
+    expect(data).toStrictEqual(response);
+  });
+
+  test('should support params', async () => {
+    nock(url).get(`${path}/modernjs`).reply(200, response);
+
+    const interceptor = jest.fn(request => (requestPath: RequestInfo) => {
+      const finalUrl = `${url}${requestPath as string}`;
+      return request(finalUrl);
+    });
+
+    configure({ interceptor });
+
+    const request = createRequest(`${path}/:id`, method, 8080, undefined);
+    const res = await request('modernjs');
+    const data = await res.json();
+    expect(res instanceof Response).toBe(true);
+    expect(data).toStrictEqual(response);
+  });
+
+  test('should support params with schema', async () => {
+    nock(url).get(`${path}/modernjs`).reply(200, response);
+
+    const interceptor = jest.fn(request => (requestPath: RequestInfo) => {
+      const finalUrl = `${url}${requestPath as string}`;
+      return request(finalUrl);
+    });
+
+    configure({ interceptor });
+
+    const request = createRequest(`${path}/:id`, method, 8080, undefined);
+    const res = await request({
+      params: {
+        id: 'modernjs',
+      },
+    });
+    const data = await res.json();
     expect(res instanceof Response).toBe(true);
     expect(data).toStrictEqual(response);
   });

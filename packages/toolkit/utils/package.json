@@ -11,83 +11,164 @@
     "modern",
     "modern.js"
   ],
-  "version": "1.2.2",
+  "version": "1.7.12",
   "jsnext:source": "./src/index.ts",
   "types": "./src/index.ts",
-  "main": "./dist/js/node/index.js",
-  "module": "./dist/js/treeshaking/index.js",
-  "jsnext:modern": "./dist/js/modern/index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "jsnext:modern": "./dist/index.js",
+  "_comment": "Provide ESM and CJS exports, ESM is used by runtime package, for treeshaking",
   "exports": {
     ".": {
-      "node": {
-        "jsnext:source": "./src/index.ts",
-        "import": "./dist/js/modern/index.js",
-        "require": "./dist/js/node/index.js"
-      },
-      "default": "./dist/js/treeshaking/index.js"
+      "jsnext:source": "./src/index.ts",
+      "default": "./dist/index.js"
     },
-    "./formatWebpackMessages": {
-      "jsnext:source": "./src/formatWebpackMessages.ts",
-      "default": "./dist/js/treeshaking/formatWebpackMessages.js"
+    "./format": {
+      "jsnext:source": "./src/format.ts",
+      "default": "./dist/format.js"
     },
     "./constants": {
       "jsnext:source": "./src/constants.ts",
-      "default": "./dist/js/treeshaking/constants.js"
+      "default": "./dist/constants.js"
+    },
+    "./ssr": {
+      "jsnext:source": "./src/ssr.ts",
+      "default": "./dist/ssr.js"
+    },
+    "./glob": "./compiled/glob/index.js",
+    "./chalk": "./compiled/chalk/index.js",
+    "./json5": "./compiled/json5/index.js",
+    "./semver": "./compiled/semver/index.js",
+    "./lodash": "./compiled/lodash/index.js",
+    "./globby": "./compiled/globby/index.js",
+    "./fast-glob": "./compiled/fast-glob/index.js",
+    "./gzip-size": "./compiled/gzip-size/index.js",
+    "./mime-types": "./compiled/mime-types/index.js",
+    "./strip-ansi": "./compiled/strip-ansi/index.js",
+    "./browserslist": "./compiled/browserslist/index.js",
+    "./webpack-chain": "./compiled/webpack-chain/index.js",
+    "./tsconfig-paths": "./compiled/tsconfig-paths/index.js"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": "./dist/index.js",
+      "./format": "./dist/format.js",
+      "./constants": "./dist/constants.js",
+      "./ssr": "./dist/ssr.js",
+      "./glob": "./compiled/glob/index.js",
+      "./chalk": "./compiled/chalk/index.js",
+      "./json5": "./compiled/json5/index.js",
+      "./semver": "./compiled/semver/index.js",
+      "./lodash": "./compiled/lodash/index.js",
+      "./globby": "./compiled/globby/index.js",
+      "./fast-glob": "./compiled/fast-glob/index.js",
+      "./gzip-size": "./compiled/gzip-size/index.js",
+      "./mime-types": "./compiled/mime-types/index.js",
+      "./strip-ansi": "./compiled/strip-ansi/index.js",
+      "./browserslist": "./compiled/browserslist/index.js",
+      "./webpack-chain": "./compiled/webpack-chain/index.js",
+      "./tsconfig-paths": "./compiled/tsconfig-paths/index.js"
     }
   },
   "typesVersions": {
     "*": {
-      "formatWebpackMessages": [
-        "./dist/types/formatWebpackMessages.d.ts"
+      "format": [
+        "./dist/format.d.ts"
       ],
       "constants": [
-        "./dist/types/constants.d.ts"
+        "./dist/constants.d.ts"
+      ],
+      "ssr": [
+        "./dist/ssr.d.ts"
+      ],
+      "glob": [
+        "./compiled/glob/index.d.ts"
+      ],
+      "chalk": [
+        "./compiled/chalk/index.d.ts"
+      ],
+      "json5": [
+        "./compiled/json5/index.d.ts"
+      ],
+      "semver": [
+        "./compiled/semver/index.d.ts"
+      ],
+      "lodash": [
+        "./compiled/lodash/index.d.ts"
+      ],
+      "globby": [
+        "./compiled/globby/index.d.ts"
+      ],
+      "fast-glob": [
+        "./compiled/fast-glob/index.d.ts"
+      ],
+      "gzip-size": [
+        "./compiled/gzip-size/index.d.ts"
+      ],
+      "mime-types": [
+        "./compiled/mime-types/index.d.ts"
+      ],
+      "strip-ansi": [
+        "./compiled/strip-ansi/index.d.ts"
+      ],
+      "browserslist": [
+        "./compiled/browserslist/index.d.ts"
+      ],
+      "webpack-chain": [
+        "./compiled/webpack-chain/types/index.d.ts"
+      ],
+      "tsconfig-paths": [
+        "./compiled/tsconfig-paths/lib/index.d.ts"
       ]
     }
   },
   "scripts": {
     "prepare": "pnpm build",
-    "prepublishOnly": "pnpm build -- --platform",
+    "prepublishOnly": "only-allow-pnpm",
     "new": "modern new",
-    "build": "modern build",
-    "test": "jest --passWithNoTests"
+    "dev": "tsc --watch",
+    "build": "wireit",
+    "test": "wireit"
   },
   "dependencies": {
-    "@babel/runtime": "^7",
-    "@types/fs-extra": "^9.0.12",
-    "browserslist": "^4.16.7",
-    "chalk": "^4.1.2",
-    "chokidar": "^3.5.2",
-    "debug": "^4.3.2",
-    "filesize": "^7.0.0",
-    "fs-extra": "^10.0.0",
-    "glob": "^7.1.7",
-    "gzip-size": "^6.0.0",
-    "import-lazy": "^4.0.0",
-    "pkg-up": "^3.1.0",
-    "recursive-readdir": "^2.2.2",
-    "strip-ansi": "6.0.0",
-    "upath": "^2.0.1",
-    "yaml": "^1.10.2",
-    "execa": "5",
-    "typescript": "^4"
+    "caniuse-lite": "^1.0.30001332",
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "@types/debug": "^4.1.7",
-    "@types/fs-extra": "^9.0.12",
-    "@types/glob": "^7.1.4",
-    "@types/jest": "^26",
-    "@types/node": "^14",
-    "@types/recursive-readdir": "^2.2.0",
-    "webpack": "^5.54.0",
+    "@modern-js/types": "workspace:*",
     "@scripts/build": "workspace:*",
+    "@scripts/jest-config": "workspace:*",
+    "@types/jest": "^27",
+    "@types/node": "^14",
+    "typescript": "^4",
     "jest": "^27",
-    "@scripts/jest-config": "workspace:*"
+    "webpack": "^5.71.0"
   },
   "sideEffects": false,
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org/",
-    "access": "public",
-    "types": "./dist/types/index.d.ts"
+  "wireit": {
+    "build": {
+      "command": "tsc",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "output": [
+        "dist/**/*"
+      ]
+    },
+    "test": {
+      "command": "jest --passWithNoTests",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json",
+        "tests/**/*"
+      ],
+      "output": []
+    }
   }
 }

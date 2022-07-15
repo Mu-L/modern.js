@@ -1,5 +1,66 @@
 # @modern-js/plugin-state
 
+## 1.2.10
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+
+## 1.2.9
+
+### Patch Changes
+
+- 37250cb8f: feat: supply `AppConfig` types
+
+## 1.2.8
+
+### Patch Changes
+
+- f7cbc771: chore(plugin-state): bump @modern-js-reduck/plugin-devtools 1.0.3 to fix the deprecatetion warning
+
+## 1.2.7
+
+### Patch Changes
+
+- d32f35134: chore: add modern/jest/eslint/ts config files to .npmignore
+
+## 1.2.6
+
+### Patch Changes
+
+- b5943b029: fix: `exports` field in package.json
+
+## 1.2.5
+
+### Patch Changes
+
+- 6c1438d2: fix: missing peer deps warnings
+- 895fa0ff: chore: using "workspace:\*" in devDependencies
+
+## 1.2.4
+
+### Patch Changes
+
+- 6cffe99d: chore:
+  remove react eslint rules for `modern-js` rule set.
+  add .eslintrc for each package to speed up linting
+- 04ae5262: chore: bump @modern-js/utils to v1.4.1 in dependencies
+- 60f7d8bf: feat: add tests dir to npmignore
+
+## 1.2.3
+
+### Patch Changes
+
+- bebb39b6: chore: improve devDependencies and peerDependencies
+
+## 1.2.2
+
+### Patch Changes
+
+- 94d02b35: feat(plugin-runtime): convert to new plugin
+- 681a1ff9: feat: remove unnecessary peerDependencies
+- e8bbc315: feat(plugin-state): convert to new plugin
+
 ## 1.2.1
 
 ### Patch Changes

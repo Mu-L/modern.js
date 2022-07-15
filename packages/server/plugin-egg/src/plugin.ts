@@ -2,8 +2,9 @@ import * as path from 'path';
 import fs from 'fs';
 import cp from 'child_process';
 import { Application } from 'egg';
-import { createPlugin } from '@modern-js/server-core';
 import { createTsHelperInstance } from 'egg-ts-helper';
+import type { ServerPlugin } from '@modern-js/server-core';
+import { APIHandlerInfo, API_DIR } from '@modern-js/bff-core';
 import { registerMiddleware, registerRoutes } from './utils';
 
 interface FrameConfig {
@@ -16,9 +17,6 @@ type StartOptions = Partial<{
   framework: string;
 }>;
 
-export type Mode = 'function' | 'framework';
-
-const API_DIR = './api';
 const SERVER_DIR = './server';
 
 let agent: any;
@@ -37,7 +35,6 @@ const mockFn = (
   };
 };
 
-// eslint-disable-next-line max-statements
 const initApp = async (options: StartOptions): Promise<Application> => {
   options.baseDir = options.baseDir || process.cwd();
   options.mode = 'single';
@@ -69,9 +66,7 @@ const initApp = async (options: StartOptions): Promise<Application> => {
 
   agent = new Agent({ ...options });
   await agent.ready();
-  // eslint-disable-next-line require-atomic-updates
   application = new App({ ...options });
-  // eslint-disable-next-line require-atomic-updates
   application.agent = agent;
   agent.application = application;
   await application.ready();
@@ -154,10 +149,14 @@ const initEggConfig = (app: Application) => {
   };
 };
 
-export default createPlugin(
-  () => ({
+export default (): ServerPlugin => ({
+  name: '@modern-js/plugin-egg',
+  pre: ['@modern-js/plugin-bff'],
+  setup: api => ({
     async prepareApiServer({ pwd, mode, config, prefix }) {
       const apiDir = path.join(pwd, API_DIR);
+      const appContext = api.useAppContext();
+      const apiHandlerInfos = appContext.apiHandlerInfos as APIHandlerInfo[];
 
       const isGenerateType = process.env.NODE_ENV === 'development';
       enableTs(pwd, isGenerateType);
@@ -167,12 +166,15 @@ export default createPlugin(
       });
 
       const { router } = app;
+      if (prefix) {
+        router.prefix(prefix);
+      }
 
       // remove routes first
       app.middleware.splice(app.middleware.length - 1, 1);
 
       if (mode === 'framework') {
-        registerRoutes(router, prefix);
+        registerRoutes(router, apiHandlerInfos);
       } else if (mode === 'function') {
         if (config) {
           const { middleware } = config as FrameConfig;
@@ -182,18 +184,13 @@ export default createPlugin(
         }
 
         initEggConfig(app);
-        registerRoutes(router, prefix as string);
+        registerRoutes(router, apiHandlerInfos);
       } else {
         throw new Error(`mode must be function or framework`);
       }
       app.use(router.routes());
 
       return (req, res) => {
-        app.on('error', err => {
-          if (err) {
-            throw err;
-          }
-        });
         return Promise.resolve(app.callback()(req, res));
       };
     },
@@ -209,7 +206,10 @@ export default createPlugin(
         await next();
         if (!ctx.body) {
           // restore statusCode
-          if (ctx.res.statusCode === 404) {
+          if (
+            ctx.res.statusCode === 404 &&
+            !(ctx.response as any)._explicitStatus
+          ) {
             ctx.res.statusCode = 200;
           }
           ctx.respond = false;
@@ -235,10 +235,6 @@ export default createPlugin(
       };
     },
   }),
-  {
-    name: '@modern-js/plugin-egg',
-    pre: ['@modern-js/plugin-bff'],
-  },
-) as any;
+});
 
 export { default as egg } from 'egg';

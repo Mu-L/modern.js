@@ -1,17 +1,22 @@
 import { createServer } from 'http';
 // eslint-disable-next-line node/no-unsupported-features/node-builtins
 import { createSecureServer } from 'http2';
-import { FSWatcher } from 'chokidar';
+import { chokidar } from '@modern-js/utils';
 import { certificateFor } from 'devcert';
-import { createDevServer } from '../src/server';
+import { mountHook } from '@modern-js/core';
+import * as ServerModule from '../src/server';
 import { fsWatcher } from '../src/watcher';
 import { proxyMiddleware } from '../src/middlewares/proxy';
 import { onFileChange } from '../src/websocket-server';
 import {
   DEFAULT_DEPS,
+  DEFAULT_PDN_HOST,
   MODERN_JS_INTERNAL_PACKAGES,
   VIRTUAL_DEPS_MAP,
 } from '../src/constants';
+import { createPluginContainer } from '../src/plugins/container';
+
+const { createDevServer, startDevServer } = ServerModule;
 
 jest.mock('koa');
 jest.mock('http');
@@ -22,6 +27,7 @@ jest.mock('../src/watcher');
 jest.mock('../src/websocket-server');
 jest.mock('../src/utils');
 jest.mock('../src/dev');
+jest.mock('@modern-js/core');
 
 // mock middlewares
 jest.mock('../src/middlewares/history-api-fallback');
@@ -44,6 +50,9 @@ jest.mock('../src/plugins/fast-refresh');
 jest.mock('../src/plugins/lazy-import');
 jest.mock('../src/plugins/lambda-api');
 
+// mock install
+jest.mock('../src/install/local-optimize');
+
 describe('plugin-unbundle server', () => {
   let mockAppContext: any;
   let mockConfig: any;
@@ -52,10 +61,13 @@ describe('plugin-unbundle server', () => {
     defaultDeps: DEFAULT_DEPS,
     internalPackages: MODERN_JS_INTERNAL_PACKAGES,
     virtualDeps: VIRTUAL_DEPS_MAP,
+    defaultPdnHost: DEFAULT_PDN_HOST,
   };
 
   beforeAll(() => {
-    (fsWatcher.init as jest.Mock).mockImplementation(() => new FSWatcher());
+    (fsWatcher.init as jest.Mock).mockImplementation(
+      () => new chokidar.FSWatcher(),
+    );
     (proxyMiddleware as jest.Mock).mockImplementation(() => []);
     (certificateFor as jest.Mock).mockImplementation(() => ({}));
   });
@@ -105,7 +117,7 @@ describe('plugin-unbundle server', () => {
   });
 
   it('server listen to file changes', async () => {
-    const mockFsWatcher = new FSWatcher();
+    const mockFsWatcher = new chokidar.FSWatcher();
     (fsWatcher.init as jest.Mock).mockReturnValue(mockFsWatcher);
     await createDevServer(mockConfig, mockAppContext, defaultDependencies);
 
@@ -117,5 +129,38 @@ describe('plugin-unbundle server', () => {
     expect(onFileChange).not.toHaveBeenCalled();
     callback('test');
     expect(onFileChange).toHaveBeenCalled();
+  });
+
+  it('start dev server', async () => {
+    jest
+      .mocked(mountHook)
+      .mockImplementation(
+        () => ({ unbundleDependencies: (param: any) => param } as any),
+      );
+    jest
+      .mocked(createPluginContainer)
+      .mockResolvedValue({ buildStart: jest.fn() } as any);
+    jest.mocked(createServer).mockImplementation(
+      () =>
+        ({
+          listen: jest.fn(),
+        } as any),
+    );
+    mockConfig.server = {
+      port: 8080,
+    };
+
+    const mockUnbundleDependencies = jest.fn();
+    const mockAPI: any = {
+      useHookRunners: () => ({
+        unbundleDependencies() {
+          mockUnbundleDependencies();
+          return {};
+        },
+      }),
+    };
+
+    await startDevServer(mockAPI, mockConfig, mockAppContext);
+    expect(mockUnbundleDependencies).toHaveBeenCalled();
   });
 });

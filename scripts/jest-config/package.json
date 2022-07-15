@@ -4,12 +4,12 @@
   "version": "0.0.0",
   "main": "jest.config.js",
   "devDependencies": {
-    "@types/jest": "^26",
+    "@types/jest": "^27",
     "@types/node": "^14",
-    "jest": "^27",
-    "esbuild": "^0.13.8",
+    "enhanced-resolve": "^5.8.3",
+    "esbuild": "^0.14.38",
     "esbuild-jest": "0.5.0",
-    "enhanced-resolve": "^5.8.3"
+    "jest": "^27"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",

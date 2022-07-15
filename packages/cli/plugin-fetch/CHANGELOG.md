@@ -1,5 +1,72 @@
 # @modern-js/plugin-fetch
 
+## 1.2.7
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+- Updated dependencies [a1198d509]
+  - @modern-js/runtime-core@1.4.9
+
+## 1.2.6
+
+### Patch Changes
+
+- d32f35134: chore: add modern/jest/eslint/ts config files to .npmignore
+- Updated dependencies [d32f35134]
+- Updated dependencies [6ae4a34ae]
+- Updated dependencies [97086dde8]
+- Updated dependencies [97086dde8]
+- Updated dependencies [b80229c79]
+- Updated dependencies [948cc4436]
+  - @modern-js/runtime-core@1.4.6
+  - @modern-js/utils@1.7.3
+
+## 1.2.5
+
+### Patch Changes
+
+- 69a728375: fix: remove exports.jsnext:source after publish
+- Updated dependencies [cd7346b0d]
+- Updated dependencies [69a728375]
+- Updated dependencies [0f86e133b]
+  - @modern-js/runtime-core@1.4.5
+  - @modern-js/utils@1.7.2
+
+## 1.2.4
+
+### Patch Changes
+
+- 6cffe99d: chore:
+  remove react eslint rules for `modern-js` rule set.
+  add .eslintrc for each package to speed up linting
+- 04ae5262: chore: bump @modern-js/utils to v1.4.1 in dependencies
+- 60f7d8bf: feat: add tests dir to npmignore
+- Updated dependencies [b8599d09]
+- Updated dependencies [6cffe99d]
+- Updated dependencies [60f7d8bf]
+- Updated dependencies [3bf4f8b0]
+  - @modern-js/utils@1.5.0
+  - @modern-js/runtime-core@1.4.2
+
+## 1.2.3
+
+### Patch Changes
+
+- bebb39b6: chore: improve devDependencies and peerDependencies
+- Updated dependencies [132f7b53]
+  - @modern-js/utils@1.3.7
+
+## 1.2.2
+
+### Patch Changes
+
+- 6557851c: feat: convert to new plugin
+- Updated dependencies [c2046f37]
+- Updated dependencies [a2261fed]
+  - @modern-js/utils@1.3.6
+  - @modern-js/runtime-core@1.4.0
+
 ## 1.2.1
 
 ### Patch Changes

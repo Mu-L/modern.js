@@ -1,4 +1,4 @@
-import { IAppContext, UserConfig } from '@modern-js/core';
+import type { IAppContext, UserConfig } from '@modern-js/core';
 import {
   isProdProfile,
   isTypescript,
@@ -6,7 +6,7 @@ import {
   chalk,
 } from '@modern-js/utils';
 
-const verifyTsConfigPaths = (root: string, userConfig: UserConfig) => {
+export const verifyTsConfigPaths = (root: string, userConfig: UserConfig) => {
   const userAliases = userConfig.source?.alias;
 
   if (!userAliases) {

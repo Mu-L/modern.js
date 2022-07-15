@@ -3,7 +3,7 @@ import * as parser from '@babel/parser';
 import traverse, { NodePath } from '@babel/traverse';
 import generator from '@babel/generator';
 import * as t from '@babel/types';
-import { createMatchPath } from 'tsconfig-paths';
+import { createMatchPath } from '@modern-js/utils/tsconfig-paths';
 import { fs } from '@modern-js/utils';
 import { defaultTransformedFunctions } from './constants';
 import { matchesPattern, isImportCall } from './utils';
@@ -94,7 +94,7 @@ const transformExport =
     mapPathString(nodePath.get('source') as NodePath<t.StringLiteral>, option);
   };
 
-const transfromSingleFileAlias = ({
+const transformSingleFileAlias = ({
   filename,
   baseUrl,
   paths,
@@ -105,7 +105,7 @@ const transfromSingleFileAlias = ({
     errorRecovery: true, // 防止typescript不支持的语法出现而报错
     plugins: ['typescript'],
   });
-  traverse(ast as any, {
+  traverse(ast, {
     CallExpression: transformCall({ filename, baseUrl, paths }) as any,
     ImportDeclaration: transformImport({
       filename,
@@ -121,18 +121,18 @@ const transfromSingleFileAlias = ({
   return generator(ast as any).code;
 };
 
-interface TransformDtsAlaisOption {
+interface TransformDtsAliasOption {
   filenames?: string[];
   baseUrl: string;
   paths: Record<string, string[] | string>;
 }
-export const transformDtsAlias = (option: TransformDtsAlaisOption) => {
+export const transformDtsAlias = (option: TransformDtsAliasOption) => {
   const { filenames = [], baseUrl, paths } = option;
   const transformResult: { path: string; content: string }[] = [];
   for (const filename of filenames) {
     transformResult.push({
       path: filename,
-      content: transfromSingleFileAlias({ filename, baseUrl, paths }),
+      content: transformSingleFileAlias({ filename, baseUrl, paths }),
     });
   }
   return transformResult;

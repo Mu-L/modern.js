@@ -11,7 +11,7 @@
     "modern",
     "modern.js"
   ],
-  "version": "1.2.1",
+  "version": "1.2.14",
   "jsnext:source": "./src/index.ts",
   "types": "./src/index.ts",
   "main": "./dist/js/node/index.js",
@@ -29,30 +29,23 @@
   },
   "scripts": {
     "prepare": "pnpm build",
-    "prepublishOnly": "pnpm build -- --platform",
+    "prepublishOnly": "only-allow-pnpm && pnpm build -- --platform",
     "new": "modern new",
-    "build": "modern build",
-    "test": "jest --passWithNoTests"
+    "build": "wireit",
+    "test": "wireit"
   },
   "dependencies": {
-    "@babel/runtime": "^7",
-    "@modern-js/utils": "workspace:^1.2.2",
-    "chokidar": "^3.5.2",
-    "glob": "^7.1.6",
+    "@babel/runtime": "^7.18.0",
+    "@modern-js/utils": "workspace:^1.7.11",
     "less": "^4.1.1",
-    "lodash": "^4.17.21",
-    "postcss": "^8.3.6",
+    "postcss": "^8.4.14",
     "postcss-import": "^14.0.2",
     "sass": "^1.45.0"
   },
   "devDependencies": {
-    "@types/glob": "^7.1.4",
-    "@types/jest": "^26",
+    "@types/jest": "^27",
     "@types/less": "^3.0.3",
-    "@types/lodash": "^4.14.172",
     "@types/node": "^14",
-    "@types/postcss-custom-properties": "^9.1.1",
-    "@types/postcss-flexbugs-fixes": "^4.2.1",
     "@types/postcss-import": "^12.0.1",
     "@types/react": "^17",
     "@types/react-dom": "^17",
@@ -71,5 +64,28 @@
     "registry": "https://registry.npmjs.org/",
     "access": "public",
     "types": "./dist/types/index.d.ts"
+  },
+  "wireit": {
+    "build": {
+      "command": "modern build",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "output": [
+        "dist/**/*"
+      ]
+    },
+    "test": {
+      "command": "jest --passWithNoTests",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json",
+        "tests/**/*"
+      ],
+      "output": []
+    }
   }
 }

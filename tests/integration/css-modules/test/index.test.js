@@ -1,22 +1,22 @@
 /* eslint-disable no-undef */
 
 const { join } = require('path');
-const { readdir, readFile, remove } = require('fs-extra');
+const { fs } = require('@modern-js/utils');
 const {
   modernBuild,
   getPort,
   modernStart,
   // launchApp,
   killApp,
-  installDeps,
   clearBuildDist,
 } = require('../../../utils/modernTestUtils');
+
+const { readdir, readFile, remove } = fs;
 
 const fixturesDir = join(__dirname, '../fixtures');
 
 let appPort;
 beforeAll(async () => {
-  installDeps(fixturesDir);
   appPort = await getPort();
 });
 

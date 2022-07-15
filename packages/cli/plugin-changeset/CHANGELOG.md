@@ -1,5 +1,124 @@
 # @modern-js/plugin-changeset
 
+## 1.4.0
+
+### Minor Changes
+
+- 33cebd2: chore(plugin-i18n): merge `@modern-js/i18n-cli-language-detector` to `@modern-js/plugin-i18n`
+
+  chore(plugin-i18n): 合并 `@modern-js/i18n-cli-language-detector` 包到 `@modern-js/plugin-i18n` 包作为子路径
+
+### Patch Changes
+
+- 2e8ea92: feat: optimize release note
+
+  feat: 优化 Release Note 格式
+
+- Updated dependencies [33cebd2]
+  - @modern-js/plugin-i18n@1.3.0
+  - @modern-js/utils@1.7.12
+
+## 1.3.1
+
+### Patch Changes
+
+- 42741db: perf(plugin-changeset): optimize custom generator release note
+- Updated dependencies [a90bc96]
+  - @modern-js/utils@1.7.9
+
+## 1.3.0
+
+### Minor Changes
+
+- 50eea41ee: feat: add change status command
+- 4599e6914: feat: add gen-release-note command
+
+### Patch Changes
+
+- 0c17860e9: fix: changeset bump support ignore option
+- Updated dependencies [63c354ad5]
+- Updated dependencies [073e9ad78]
+- Updated dependencies [f4a7d49e1]
+  - @modern-js/utils@1.7.8
+
+## 1.2.8
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+- Updated dependencies [a1198d509]
+  - @modern-js/i18n-cli-language-detector@1.2.4
+  - @modern-js/plugin-i18n@1.2.7
+
+## 1.2.7
+
+### Patch Changes
+
+- d32f35134: chore: add modern/jest/eslint/ts config files to .npmignore
+- Updated dependencies [d32f35134]
+- Updated dependencies [6ae4a34ae]
+- Updated dependencies [b80229c79]
+- Updated dependencies [948cc4436]
+  - @modern-js/i18n-cli-language-detector@1.2.3
+  - @modern-js/plugin-i18n@1.2.6
+  - @modern-js/utils@1.7.3
+
+## 1.2.6
+
+### Patch Changes
+
+- 69a728375: fix: remove exports.jsnext:source after publish
+- Updated dependencies [cd7346b0d]
+- Updated dependencies [69a728375]
+  - @modern-js/utils@1.7.2
+  - @modern-js/plugin-i18n@1.2.5
+
+## 1.2.5
+
+### Patch Changes
+
+- 6cffe99d: chore:
+  remove react eslint rules for `modern-js` rule set.
+  add .eslintrc for each package to speed up linting
+- 04ae5262: chore: bump @modern-js/utils to v1.4.1 in dependencies
+- 60f7d8bf: feat: add tests dir to npmignore
+- 5dbbeb57: fix: export extended Command type
+- Updated dependencies [b8599d09]
+- Updated dependencies [6cffe99d]
+- Updated dependencies [04ae5262]
+- Updated dependencies [60f7d8bf]
+- Updated dependencies [3bf4f8b0]
+  - @modern-js/utils@1.5.0
+  - @modern-js/i18n-cli-language-detector@1.2.2
+  - @modern-js/plugin-i18n@1.2.4
+
+## 1.2.4
+
+### Patch Changes
+
+- bebb39b6: chore: improve devDependencies and peerDependencies
+- Updated dependencies [132f7b53]
+  - @modern-js/utils@1.3.7
+
+## 1.2.3
+
+### Patch Changes
+
+- 61e3f623: feat: convert to new plugin
+- 681a1ff9: feat: remove unnecessary peerDependencies
+- Updated dependencies [c2046f37]
+  - @modern-js/utils@1.3.6
+
+## 1.2.2
+
+### Patch Changes
+
+- 6668a1bf: feat: package manager options support npm
+- Updated dependencies [deeaa602]
+- Updated dependencies [54786e58]
+  - @modern-js/utils@1.3.2
+  - @modern-js/core@1.4.3
+
 ## 1.2.1
 
 ### Patch Changes

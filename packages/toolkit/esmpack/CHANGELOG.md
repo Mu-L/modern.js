@@ -1,5 +1,85 @@
 # @modern-js/esmpack
 
+## 1.3.3
+
+### Patch Changes
+
+- 9377d2d9d: feat: support addPlugins util in tools.postcss
+- Updated dependencies [9377d2d9d]
+- Updated dependencies [8c9ad1749]
+  - @modern-js/utils@1.7.7
+
+## 1.3.2
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+
+## 1.3.1
+
+### Patch Changes
+
+- 0e0537005: fix: unlock @babel/core version
+- 69a728375: fix: remove exports.jsnext:source after publish
+- Updated dependencies [cd7346b0d]
+- Updated dependencies [69a728375]
+  - @modern-js/utils@1.7.2
+
+## 1.3.0
+
+### Minor Changes
+
+- 0ee4bb4e: feat: prebundle webpack loaders and plugins
+
+### Patch Changes
+
+- Updated dependencies [0ee4bb4e]
+- Updated dependencies [6fa74d5f]
+  - @modern-js/utils@1.7.0
+
+## 1.2.4
+
+### Patch Changes
+
+- 6cffe99d: chore:
+  remove react eslint rules for `modern-js` rule set.
+  add .eslintrc for each package to speed up linting
+- 04ae5262: chore: bump @modern-js/utils to v1.4.1 in dependencies
+- Updated dependencies [b8599d09]
+- Updated dependencies [60f7d8bf]
+- Updated dependencies [3bf4f8b0]
+  - @modern-js/utils@1.5.0
+
+## 1.2.3
+
+### Patch Changes
+
+- 17d0cc46: feat: prebundle lodash to @modern-js/utils/lodash
+- Updated dependencies [77ff9754]
+- Updated dependencies [d2d1d6b2]
+- Updated dependencies [07a4887e]
+- Updated dependencies [ea2ae711]
+- Updated dependencies [17d0cc46]
+- Updated dependencies [d2d1d6b2]
+  - @modern-js/utils@1.4.0
+
+## 1.2.2
+
+### Patch Changes
+
+- 55e18278: chore: remove unused dependencies and devDependencies
+- Updated dependencies [4c792f68]
+- Updated dependencies [a7f42f48]
+  - @modern-js/utils@1.3.3
+
+## 1.2.1
+
+### Patch Changes
+
+- deeaa602: support svg/proxy/multi-version in unbundled
+- Updated dependencies [deeaa602]
+  - @modern-js/utils@1.3.2
+
 ## 1.2.0
 
 ### Minor Changes

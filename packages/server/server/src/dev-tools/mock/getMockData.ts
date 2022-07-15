@@ -1,8 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { compatRequire } from '@modern-js/utils';
 import { match } from 'path-to-regexp';
-import { NextFunction } from '../../type';
-import { ModernServerContext } from '../../libs/context';
+import { ModernServerContext, NextFunction } from '@modern-js/types';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const VALID_METHODS = ['get', 'post', 'put', 'delete', 'patch'];
@@ -82,9 +81,9 @@ const normalizeConfig = (mockConfig: MockConfig) =>
 const _blank = ' ';
 const parseKey = (key: string) => {
   // 'Method /pathname' | '/pathname'
-  const splited = key.split(_blank).filter(Boolean);
-  if (splited.length > 1) {
-    const [method, pathname] = splited;
+  const splitted = key.split(_blank).filter(Boolean);
+  if (splitted.length > 1) {
+    const [method, pathname] = splitted;
     return {
       method: method.toLowerCase(),
       path: pathname,

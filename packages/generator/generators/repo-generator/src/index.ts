@@ -1,5 +1,5 @@
 import path from 'path';
-import { merge } from 'lodash';
+import { merge } from '@modern-js/utils/lodash';
 import { GeneratorContext, GeneratorCore } from '@modern-js/codesmith';
 import { AppAPI } from '@modern-js/codesmith-api-app';
 import {
@@ -7,7 +7,7 @@ import {
   SolutionSchema,
   SolutionGenerator,
   Solution,
-  SolutionDefualtConfig,
+  SolutionDefaultConfig,
   BaseGenerator,
   MonorepoNewActionSchema,
   SubSolution,
@@ -33,7 +33,7 @@ const mergeDefaultConfig = (context: GeneratorContext) => {
     merge(
       context.config,
       { solution: defaultSolution },
-      SolutionDefualtConfig[defaultSolution as Solution],
+      SolutionDefaultConfig[defaultSolution as Solution],
     );
   }
 };

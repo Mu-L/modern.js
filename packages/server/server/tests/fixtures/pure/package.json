@@ -2,9 +2,8 @@
   "name": "deploy",
   "version": "0.1.0",
   "scripts": {
-    "reset": "del-cli node_modules",
     "dev": "modern dev",
-    "build": "modern build",
+    "build": "wireit",
     "start": "modern start",
     "new": "modern new",
     "lint": "modern lint",
@@ -16,6 +15,19 @@
     "runtime": {
       "router": true,
       "state": true
+    }
+  },
+  "wireit": {
+    "build": {
+      "command": "modern build",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "output": [
+        "dist/**/*"
+      ]
     }
   }
 }

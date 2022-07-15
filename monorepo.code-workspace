@@ -17,10 +17,6 @@
       "path": "packages/solutions/app-tools"
     },
     {
-      "name": "@modern-js/babel-chain",
-      "path": "packages/toolkit/babel-chain"
-    },
-    {
       "name": "@modern-js/babel-compiler",
       "path": "packages/toolkit/compiler/babel"
     },
@@ -49,16 +45,16 @@
       "path": "packages/generator/generators/bff-generator"
     },
     {
-      "name": "@modern-js/bff-refactor-generator",
-      "path": "packages/generator/generators/bff-refactor-generator"
-    },
-    {
       "name": "@modern-js/bff-runtime",
       "path": "packages/server/bff-runtime"
     },
     {
       "name": "@modern-js/bff-utils",
       "path": "packages/server/bff-utils"
+    },
+    {
+      "name": "@modern-js/bff-core",
+      "path": "packages/server/bff-core"
     },
     {
       "name": "@modern-js/changeset-generator",
@@ -89,14 +85,6 @@
       "path": "packages/generator/generators/dependence-generator"
     },
     {
-      "name": "@modern-js/docsite-generator",
-      "path": "packages/generator/generators/docsite-generator"
-    },
-    {
-      "name": "@modern-js/doctor",
-      "path": "packages/toolkit/doctor"
-    },
-    {
       "name": "@modern-js/electron-generator",
       "path": "packages/generator/generators/electron-generator"
     },
@@ -109,10 +97,6 @@
       "path": "packages/generator/generators/entry-generator"
     },
     {
-      "name": "@modern-js/esbuild-compiler",
-      "path": "packages/toolkit/compiler/esbuild"
-    },
-    {
       "name": "@modern-js/eslint-config",
       "path": "packages/review/eslint-config"
     },
@@ -123,10 +107,6 @@
     {
       "name": "@modern-js/esmpack",
       "path": "packages/toolkit/esmpack"
-    },
-    {
-      "name": "@modern-js/freeze",
-      "path": "packages/toolkit/freeze"
     },
     {
       "name": "@modern-js/generator-cases",
@@ -157,24 +137,12 @@
       "path": "packages/server/hmr-client"
     },
     {
-      "name": "@modern-js/i18n-cli-language-detector",
-      "path": "packages/cli/i18n-cli-language-detector"
-    },
-    {
-      "name": "@modern-js/load-config",
-      "path": "packages/toolkit/load-config"
-    },
-    {
       "name": "@modern-js/module-generator",
       "path": "packages/generator/generators/module-generator"
     },
     {
       "name": "@modern-js/module-tools",
       "path": "packages/solutions/module-tools"
-    },
-    {
-      "name": "@modern-js/module-tools-hooks",
-      "path": "packages/toolkit/module-tools-hooks"
     },
     {
       "name": "@modern-js/monorepo-generator",
@@ -237,10 +205,6 @@
       "path": "packages/server/plugin-express"
     },
     {
-      "name": "@modern-js/plugin-fast-refresh",
-      "path": "packages/cli/plugin-fast-refresh"
-    },
-    {
       "name": "@modern-js/plugin-fetch",
       "path": "packages/cli/plugin-fetch"
     },
@@ -281,10 +245,6 @@
       "path": "packages/server/plugin-nest"
     },
     {
-      "name": "@modern-js/plugin-nocode",
-      "path": "packages/cli/plugin-nocode"
-    },
-    {
       "name": "@modern-js/plugin-polyfill",
       "path": "packages/server/plugin-polyfill"
     },
@@ -303,10 +263,6 @@
     {
       "name": "@modern-js/plugin-server",
       "path": "packages/server/plugin-server"
-    },
-    {
-      "name": "@modern-js/plugin-server-build",
-      "path": "packages/cli/plugin-server-build"
     },
     {
       "name": "@modern-js/plugin-ssg",
@@ -357,6 +313,10 @@
       "path": "packages/server/server"
     },
     {
+      "name": "@modern-js/prod-server",
+      "path": "packages/server/prod-server"
+    },
+    {
       "name": "@modern-js/server-generator",
       "path": "packages/generator/generators/server-generator"
     },
@@ -405,14 +365,6 @@
       "path": "packages/toolkit/types"
     },
     {
-      "name": "@modern-js/unbundle-generator",
-      "path": "packages/generator/generators/unbundle-generator"
-    },
-    {
-      "name": "@modern-js/update",
-      "path": "packages/toolkit/update"
-    },
-    {
       "name": "@modern-js/utils",
       "path": "packages/toolkit/utils"
     },
@@ -435,6 +387,10 @@
     {
       "name": "Integration Tests",
       "path": "tests"
+    },
+    {
+      "name": "Local Test Projects",
+      "path": "local-test-project"
     }
   ],
   "settings": {
@@ -451,38 +407,27 @@
       "README": "markdown"
     },
     "files.exclude": {
-      "**/*/adapters/**/index.js": true,
-      "**/*/adapters/**/index.ts": true,
       "**/coverage": true,
       "**/dist": true
     },
     "search.useIgnoreFiles": true,
     "search.exclude": {
-      "**/.git": true,
+      "**/dist": true,
       "**/*.log": true,
       "**/*.pid": true,
-      "**/bower_components": true,
-      "**/build": true,
+      "**/.git": true,
+      "**/compiled": true,
       "**/coverage": true,
-      "**/dist": true,
       "**/node_modules": true,
-      "**/output": true,
-      "**/package-lock.json": true,
-      "**/yarn.lock": true
+      "**/bower_components": true
     },
     //
-    "editor.rulers": [
-      80,
-      120
-    ],
+    "editor.rulers": [80, 120],
     "files.eol": "\n",
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
     //
-    "todo-tree.general.tags": [
-      "TODO:",
-      "FIXME:"
-    ],
+    "todo-tree.general.tags": ["TODO:", "FIXME:"],
     "todo-tree.highlights.defaultHighlight": {
       "gutterIcon": true
     },
@@ -502,23 +447,21 @@
     //
     "cSpell.diagnosticLevel": "Hint",
     "[javascript]": {
-      "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[javascriptreact]": {
-      "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[typescript]": {
-      "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[typescriptreact]": {
-      "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[vue]": {
-      "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "eslint.alwaysShowStatus": true,
-    // "eslint.nodePath": "./node_modules",
-    // "eslint.packageManager": "yarn",
     "eslint.run": "onType",
     "eslint.options": {
       "rules": {
@@ -536,10 +479,6 @@
     "eslint.lintTask.enable": true,
     "javascript.validate.enable": false,
     "typescript.validate.enable": true,
-    "flow.enabled": false,
-    //
-    "htmlhint.enable": true,
-    //
     "stylelint.enable": false,
     "css.validate": false,
     "scss.validate": false,
@@ -572,7 +511,6 @@
     "editor.codeActionsOnSave": {
       "source.fixAll.eslint": true
     },
-    "editor.codeActionsOnSaveTimeout": 5000,
     "javascript.format.enable": false,
     "typescript.format.enable": false,
     //
@@ -592,7 +530,6 @@
       "editor.formatOnSave": true
     },
     "emmet.triggerExpansionOnTab": true,
-    "typescript.tsdk": "node_modules/typescript/lib",
-    "deno.enable": false
+    "typescript.tsdk": "node_modules/typescript/lib"
   }
 }

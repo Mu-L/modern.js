@@ -1,5 +1,205 @@
 # @modern-js/plugin-analyze
 
+## 1.5.0
+
+### Minor Changes
+
+- 33cebd2: chore(core): move Hooks types define to `@modern-js/core`
+
+  chore(core): 移动 Hooks 类型定义到 `@modern-js/core` 包
+
+### Patch Changes
+
+- @modern-js/utils@1.7.12
+
+## 1.4.7
+
+### Patch Changes
+
+- f29e9ba: feat: simplify context usage, no longer depend on containers
+- Updated dependencies [f29e9ba]
+- Updated dependencies [a90bc96]
+  - @modern-js/plugin@1.4.0
+  - @modern-js/utils@1.7.9
+
+## 1.4.6
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+- Updated dependencies [a1198d509]
+  - @modern-js/plugin@1.3.6
+
+## 1.4.5
+
+### Patch Changes
+
+- 55aac6aa6: chore: shorten the auto-generated convention route filename
+- Updated dependencies [54fa1dbd6]
+- Updated dependencies [33de0f7ec]
+  - @modern-js/plugin@1.3.5
+  - @modern-js/utils@1.7.5
+
+## 1.4.4
+
+### Patch Changes
+
+- 3680834f2: chore(plugin-analyze): remove @rollup/pluginutils from dependencies
+- Updated dependencies [b8cfc42cd]
+- Updated dependencies [804a5bb8a]
+  - @modern-js/utils@1.7.4
+
+## 1.4.3
+
+### Patch Changes
+
+- d32f35134: chore: add modern/jest/eslint/ts config files to .npmignore
+- 43d9bb5fa: fix(plugin-analyze): fix nested routes missing parent layout in some cases
+- Updated dependencies [d5913bd96]
+- Updated dependencies [d32f35134]
+- Updated dependencies [6ae4a34ae]
+- Updated dependencies [b80229c79]
+- Updated dependencies [948cc4436]
+  - @modern-js/plugin@1.3.4
+  - @modern-js/utils@1.7.3
+
+## 1.4.2
+
+### Patch Changes
+
+- 69a728375: fix: remove exports.jsnext:source after publish
+- Updated dependencies [cd7346b0d]
+- Updated dependencies [69a728375]
+  - @modern-js/utils@1.7.2
+
+## 1.4.1
+
+### Patch Changes
+
+- 592edabc: feat: prebundle url-join,mime-types,json5,fast-glob,globby,ora,inquirer
+- 895fa0ff: chore: using "workspace:\*" in devDependencies
+- Updated dependencies [2d155c4c]
+- Updated dependencies [123e432d]
+- Updated dependencies [e5a9b26d]
+- Updated dependencies [0b26b93b]
+- Updated dependencies [123e432d]
+- Updated dependencies [f9f66ef9]
+- Updated dependencies [592edabc]
+- Updated dependencies [895fa0ff]
+- Updated dependencies [3578913e]
+- Updated dependencies [1c3beab3]
+  - @modern-js/utils@1.6.0
+
+## 1.4.0
+
+### Minor Changes
+
+- 3bf4f8b0: feat: support start api server only
+
+### Patch Changes
+
+- 04ae5262: chore: bump @modern-js/utils to v1.4.1 in dependencies
+- 60f7d8bf: feat: add tests dir to npmignore
+- Updated dependencies [b8599d09]
+- Updated dependencies [6cffe99d]
+- Updated dependencies [60f7d8bf]
+- Updated dependencies [3bf4f8b0]
+  - @modern-js/utils@1.5.0
+  - @modern-js/plugin@1.3.3
+
+## 1.3.6
+
+### Patch Changes
+
+- 046e58aa: fix: plugin-analyze and plugin-ssg should not import method from core
+- Updated dependencies [77ff9754]
+- Updated dependencies [d2d1d6b2]
+- Updated dependencies [07a4887e]
+- Updated dependencies [ea2ae711]
+- Updated dependencies [17d0cc46]
+- Updated dependencies [d2d1d6b2]
+  - @modern-js/utils@1.4.0
+
+## 1.3.5
+
+### Patch Changes
+
+- bebb39b6: chore: improve devDependencies and peerDependencies
+- ff73a5cc: fix style-component bugs
+- Updated dependencies [132f7b53]
+  - @modern-js/utils@1.3.7
+
+## 1.3.4
+
+### Patch Changes
+
+- 681a1ff9: feat: remove unnecessary peerDependencies
+- Updated dependencies [c2046f37]
+- Updated dependencies [dc88abf9]
+- Updated dependencies [0462ff77]
+  - @modern-js/utils@1.3.6
+  - @modern-js/plugin@1.3.2
+
+## 1.3.3
+
+### Patch Changes
+
+- deeaa602: support svg/proxy/multi-version in unbundled
+- Updated dependencies [deeaa602]
+- Updated dependencies [54786e58]
+  - @modern-js/utils@1.3.2
+  - @modern-js/core@1.4.3
+
+## 1.3.2
+
+### Patch Changes
+
+- 6891e4c2: add addDefineTypes hooks
+- Updated dependencies [b376c8d6]
+- Updated dependencies [e62c4efd]
+- Updated dependencies [e2a8233f]
+  - @modern-js/core@1.4.2
+
+## 1.3.1
+
+### Patch Changes
+
+- b7a9eeba: fix build entry not found bugs
+- 78279953: compiler entry bug fix and dev build console
+- 4d72edea: support dev compiler by entry
+- Updated dependencies [53aca274]
+- Updated dependencies [78279953]
+- Updated dependencies [e116ace5]
+- Updated dependencies [4d72edea]
+  - @modern-js/core@1.4.1
+  - @modern-js/utils@1.3.1
+
+## 1.3.0
+
+### Minor Changes
+
+- ec4dbffb: feat: support as a pure api service
+- bada2879: refactor plugin-garfish:
+  - change @modern-js/plugin-micro-frontend => @modern-js/plugin-garfish
+  - remove disableCustomerRouter logic
+  - adding unit test
+  - fix plugin-garfish type error
+
+### Patch Changes
+
+- ddf0c3a6: feat: support bottom template
+- bd819a8d: fix: file route changed not trigger hot reload
+- 24f616ca: feat: support custom meta info
+- Updated dependencies [d9cc5ea9]
+- Updated dependencies [bd819a8d]
+- Updated dependencies [ec4dbffb]
+- Updated dependencies [d099e5c5]
+- Updated dependencies [bada2879]
+- Updated dependencies [24f616ca]
+- Updated dependencies [bd819a8d]
+  - @modern-js/core@1.4.0
+  - @modern-js/utils@1.3.0
+
 ## 1.2.1
 
 ### Patch Changes

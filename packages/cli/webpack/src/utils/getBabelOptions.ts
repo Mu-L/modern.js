@@ -1,66 +1,82 @@
-import path from 'path';
+import { isProd, applyOptionsChain, isUseSSRBundle } from '@modern-js/utils';
 import {
-  isProd,
-  getCacheIdentifier,
-  applyOptionsChain,
-  isUseSSRBundle,
-} from '@modern-js/utils';
-import { NormalizedConfig } from '@modern-js/core';
-import { Options as BabelPresetAppOptions } from '@modern-js/babel-preset-app';
-import type { BabelChain } from '@modern-js/babel-chain';
-import { readPackageJson } from './readPackageJson';
-import { CACHE_DIRECTORY } from './constants';
+  getBabelConfig,
+  BabelChain,
+  Options as BabelPresetAppOptions,
+} from '@modern-js/babel-preset-app';
+import type { NormalizedConfig, TransformOptions } from '@modern-js/core';
+
+export const getUseBuiltIns = (config: NormalizedConfig) => {
+  const { polyfill } = config.output || {};
+  if (polyfill === 'ua' || polyfill === 'off') {
+    return false;
+  }
+  return polyfill;
+};
 
 export const getBabelOptions = (
   metaName: string,
   appDirectory: string,
   config: NormalizedConfig,
-  name: string,
   chain: BabelChain,
-) => ({
-  babelrc: false,
-  configFile: false,
-  cacheIdentifier: getCacheIdentifier([
+  babelPresetAppOptions?: Partial<BabelPresetAppOptions>,
+) => {
+  const lodashOptions = applyOptionsChain(
+    { id: ['lodash', 'ramda'] },
+    config.tools?.lodash as any,
+  );
+
+  const styledComponentsOptions = applyOptionsChain(
     {
-      name: 'babel-loader',
-      version: readPackageJson(require.resolve('babel-loader')).version,
+      pure: true,
+      displayName: true,
+      ssr: isUseSSRBundle(config),
+      transpileTemplateLiterals: true,
     },
-    {
-      name: '@modern-js/babel-preset-app',
-      version: readPackageJson(require.resolve('@modern-js/babel-preset-app'))
-        .version,
+    config.tools?.styledComponents,
+  );
+
+  const includes: Array<string | RegExp> = [];
+  const excludes: Array<string | RegExp> = [];
+
+  const babelUtils = {
+    addIncludes(items: string | RegExp | Array<string | RegExp>) {
+      if (Array.isArray(items)) {
+        includes.push(...items);
+      } else {
+        includes.push(items);
+      }
     },
-  ]),
-  cacheDirectory: path.resolve(appDirectory, CACHE_DIRECTORY, `babel/${name}`),
-  cacheCompression: false,
-  compact: isProd(),
-  presets: [
-    [
-      require.resolve('@modern-js/babel-preset-app'),
-      {
-        metaName,
-        appDirectory,
-        target: 'client',
-        lodash: applyOptionsChain(
-          { id: ['lodash', 'ramda'] },
-          config.tools?.lodash as any,
-        ),
-        useLegacyDecorators: !config.output?.enableLatestDecorators,
-        useBuiltIns:
-          config.output?.polyfill === 'ua' || config.output?.polyfill === 'off'
-            ? false
-            : config.output?.polyfill,
-        chain,
-        styledCompontents: applyOptionsChain(
-          {
-            pure: true,
-            displayName: true,
-            ssr: isUseSSRBundle(config),
-            transpileTemplateLiterals: true,
-          },
-          (config.tools as any)?.styledComponents,
-        ),
-      } as BabelPresetAppOptions,
-    ],
-  ],
-});
+    addExcludes(items: string | RegExp | Array<string | RegExp>) {
+      if (Array.isArray(items)) {
+        excludes.push(...items);
+      } else {
+        excludes.push(items);
+      }
+    },
+  };
+
+  const babelOptions: TransformOptions = {
+    babelrc: false,
+    configFile: false,
+    compact: isProd(),
+    ...getBabelConfig({
+      metaName,
+      appDirectory,
+      lodash: lodashOptions,
+      useLegacyDecorators: !config.output?.enableLatestDecorators,
+      useBuiltIns: getUseBuiltIns(config),
+      chain,
+      styledComponents: styledComponentsOptions,
+      userBabelConfig: config.tools?.babel,
+      userBabelConfigUtils: babelUtils,
+      ...babelPresetAppOptions,
+    }),
+  };
+
+  return {
+    options: babelOptions,
+    includes,
+    excludes,
+  };
+};

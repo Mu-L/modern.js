@@ -1,5 +1,110 @@
 # @modern-js/monorepo-generator
 
+## 2.1.3
+
+### Patch Changes
+
+- 74e74ee: feat: update codesmith json api version
+
+  feat: 升级 `@modern-js/codesmith-api-json` 版本
+
+## 2.1.2
+
+### Patch Changes
+
+- f148a23: feat: add gen-release-note command to generator template
+
+## 2.1.1
+
+### Patch Changes
+
+- eeedc80: feat: add plugin-jarvis to dependencies of solutions
+- 341bb42: feat: bump codesmith package version
+
+## 2.1.0
+
+### Minor Changes
+
+- 50eea41ee: feat: add change status command
+
+## 2.0.4
+
+### Patch Changes
+
+- bcd95a00b: feat: support custom solution generator success info
+- bcd95a00b: fix: optimize solution generator success info
+
+## 2.0.3
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+- c7e38b4e6: feat: upgrade codesmith pkg version
+
+## 2.0.2
+
+### Patch Changes
+
+- a7e8b061: fix: remove some unused settings in vscode settings
+- a4584574: fix(generators): remove adapters from files.exclude and .gitignore
+
+## 2.0.1
+
+### Patch Changes
+
+- 9ddd004b8: feat: generator template add husky package
+
+## 2.0.0
+
+### Major Changes
+
+- 320067e9a: perf: replace del-cli with rimraf
+
+### Patch Changes
+
+- 6b0bb5e3b: feat: bump codesmith version
+
+## 1.4.1
+
+### Patch Changes
+
+- 895fa0ff: chore: using "workspace:\*" in devDependencies
+
+## 1.4.0
+
+### Minor Changes
+
+- d1480a35: feat: remove generator's .npmrc file
+- 2b12032c: feat: upgrade csmith tools
+- a4330c73: feat: adjust generator eslint and tsconig file
+
+### Patch Changes
+
+- 6cffe99d: chore:
+  remove react eslint rules for `modern-js` rule set.
+  add .eslintrc for each package to speed up linting
+
+## 1.3.5
+
+### Patch Changes
+
+- 6c651ee7: fix: lint-staged warning
+
+## 1.3.4
+
+### Patch Changes
+
+- c29451a5: feat: change editor config
+- edc3bd3d: fix: @modern-js/core package not found
+
+## 1.3.3
+
+### Patch Changes
+
+- 6668a1bf: feat: upgrade @modern-js/codesmith-api-app version
+- 6668a1bf: feat: package manager options support npm
+- fab92861: fix: @modern-js/core phantom dep
+
 ## 1.3.2
 
 ### Patch Changes

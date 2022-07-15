@@ -1,16 +1,17 @@
-// eslint-disable-next-line filenames/match-exported
 import ReactDOM from 'react-dom';
-import { createPlugin } from '@modern-js/runtime-core';
+import type { Plugin } from '@modern-js/runtime-core';
 import { loadableReady } from '@loadable/component';
 import { RenderLevel, SSRServerContext } from './serverRender/type';
+import { formatClient, mockResponse } from './utils';
 
 declare module '@modern-js/runtime-core' {
   interface RuntimeContext {
-    ssrContext?: any;
+    ssrContext: SSRServerContext;
   }
 
   interface TRuntimeContext {
     request: SSRServerContext['request'];
+    response: SSRServerContext['response'];
   }
 
   interface SSRContainer {
@@ -19,20 +20,12 @@ declare module '@modern-js/runtime-core' {
   }
 }
 
-const getQuery = () =>
-  window.location.search
-    .substring(1)
-    .split('&')
-    .reduce<Record<string, string>>((res, item) => {
-      const [key, value] = item.split('=');
-      res[key] = value;
+const ssr = (): Plugin => ({
+  name: '@modern-js/plugin-ssr',
+  setup: () => {
+    const mockResp = mockResponse();
 
-      return res;
-    }, {});
-
-const ssr: any = () =>
-  createPlugin(
-    () => ({
+    return {
       client: async ({ App, context, rootElement }) => {
         const renderLevel = window?._SSR_DATA?.renderLevel;
 
@@ -56,32 +49,45 @@ const ssr: any = () =>
           ReactDOM.render(<App context={context} />, rootElement);
         }
       },
+      init({ context }, next) {
+        const request: SSRServerContext['request'] | undefined =
+          window?._SSR_DATA?.context?.request;
+        if (!request) {
+          return next({ context });
+        }
+
+        context.ssrContext.response = mockResp;
+        context.ssrContext.request = formatClient(request);
+        return next({ context });
+      },
       pickContext: ({ context, pickedContext }, next) => {
         const request: SSRServerContext['request'] | undefined =
           window?._SSR_DATA?.context?.request;
+        const { initialData } = context;
+
+        if (!request) {
+          return next({
+            context,
+            pickedContext: {
+              ...pickedContext,
+              initialData,
+            },
+          });
+        }
+
         return next({
           context,
           pickedContext: {
             ...pickedContext,
-            request: {
-              params: {},
-              host: location.host,
-              pathname: location.pathname,
-              query: getQuery(),
-              headers: {},
-              url: location.href,
-              cookieMap: request?.cookieMap || {},
-              cookie: request?.headers.cookie || document.cookie,
-              referer: request?.referer || document.referrer,
-              userAgent: request?.headers['user-agent'] || navigator.userAgent,
-              ...request,
-            },
+            initialData,
+            request,
+            response: mockResp,
           },
         });
       },
-    }),
-    { name: '@modern-js/plugin-ssr' },
-  );
+    };
+  },
+});
 
 export default ssr;
 

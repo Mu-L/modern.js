@@ -6,9 +6,9 @@ import {
   INTROSPECTION_ROUTE_PATH,
   INTROSPECTION_ROUTE_METHOD,
 } from '../constant';
-import { APIHanlderInfo, extractAPIHandlers } from './extract-api-handlers';
+import { APIHandlerInfo, extractAPIHandlers } from './extract-api-handlers';
 
-export type ExtraAPIHandlerInfo = APIHanlderInfo & {
+export type ExtraAPIHandlerInfo = APIHandlerInfo & {
   path?: string;
 };
 
@@ -39,7 +39,7 @@ export const injectAPIHandlerInfos = (apiDir: string, prefix?: string) => {
     method: INTROSPECTION_ROUTE_METHOD,
   });
 
-  if (prefix) {
+  if (prefix && prefix !== '/') {
     apiHandlerInfos = apiHandlerInfos.map(({ name, handler, method }) => ({
       handler,
       method,

@@ -1,5 +1,146 @@
 # @modern-js/babel-preset-base
 
+## 1.5.0
+
+### Minor Changes
+
+- 33cebd2: chore(babel-chain): merge `@modern-js/babel-chain` to `@modern-js/babel-preset-base`
+
+  chore(babel-chain): 合并 `@modern-js/babel-chain` 到 `@modern-js/babel-preset-base`
+
+### Patch Changes
+
+- @modern-js/utils@1.7.12
+
+## 1.4.4
+
+### Patch Changes
+
+- 3050acc: change babel-plugin-macro babel config
+- a90bc96: perf(babel): skip babel-plugin-import if package not installed
+- Updated dependencies [a90bc96]
+  - @modern-js/utils@1.7.9
+
+## 1.4.3
+
+### Patch Changes
+
+- 8d0eb81f5: change babel-plugin-macro babel config
+
+## 1.4.2
+
+### Patch Changes
+
+- 073e9ad78: feat(webpack): improve utils of tools.webpack
+- Updated dependencies [63c354ad5]
+- Updated dependencies [073e9ad78]
+- Updated dependencies [f4a7d49e1]
+  - @modern-js/utils@1.7.8
+
+## 1.4.1
+
+### Patch Changes
+
+- 8c9ad1749: feat(babel-preset-base): prebundle babel plugins
+- b7a1cea52: feat: support utils in tools.babel
+- fde14696e: node browserlist use v12
+- Updated dependencies [9377d2d9d]
+- Updated dependencies [8c9ad1749]
+  - @modern-js/utils@1.7.7
+
+## 1.4.0
+
+### Minor Changes
+
+- a1198d509: fix: regenerator-runtime is bundled twice
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+- Updated dependencies [a1198d509]
+  - @modern-js/babel-chain@1.2.5
+
+## 1.3.2
+
+### Patch Changes
+
+- d32f35134: chore: add modern/jest/eslint/ts config files to .npmignore
+- 1a30be07b: fix: remove some babel plugins that provided by @babel/preset-env
+- Updated dependencies [d32f35134]
+- Updated dependencies [6ae4a34ae]
+- Updated dependencies [b80229c79]
+- Updated dependencies [948cc4436]
+  - @modern-js/babel-chain@1.2.3
+  - @modern-js/utils@1.7.3
+
+## 1.3.1
+
+### Patch Changes
+
+- cd7346b0d: fix some peer dependencies problem & change shell log
+- 0e0537005: fix: unlock @babel/core version
+- 69a728375: fix: remove exports.jsnext:source after publish
+- 0f86e133b: fix react & react-dom types problem
+- Updated dependencies [cd7346b0d]
+- Updated dependencies [69a728375]
+  - @modern-js/utils@1.7.2
+
+## 1.3.0
+
+### Minor Changes
+
+- 0ee4bb4e: feat: prebundle webpack loaders and plugins
+
+### Patch Changes
+
+- Updated dependencies [0ee4bb4e]
+- Updated dependencies [6fa74d5f]
+  - @modern-js/utils@1.7.0
+
+## 1.2.5
+
+### Patch Changes
+
+- 6cffe99d: chore:
+  remove react eslint rules for `modern-js` rule set.
+  add .eslintrc for each package to speed up linting
+- 04ae5262: chore: bump @modern-js/utils to v1.4.1 in dependencies
+- 60f7d8bf: feat: add tests dir to npmignore
+- Updated dependencies [b8599d09]
+- Updated dependencies [6cffe99d]
+- Updated dependencies [60f7d8bf]
+- Updated dependencies [3bf4f8b0]
+  - @modern-js/utils@1.5.0
+  - @modern-js/babel-chain@1.2.2
+
+## 1.2.4
+
+### Patch Changes
+
+- 17d0cc46: feat: prebundle lodash to @modern-js/utils/lodash
+- Updated dependencies [77ff9754]
+- Updated dependencies [d2d1d6b2]
+- Updated dependencies [07a4887e]
+- Updated dependencies [ea2ae711]
+- Updated dependencies [17d0cc46]
+- Updated dependencies [d2d1d6b2]
+  - @modern-js/utils@1.4.0
+
+## 1.2.3
+
+### Patch Changes
+
+- 969f172f: support tools.styledComponents for module-tools,support close tsc process with disbaleTsChecker
+- Updated dependencies [4c792f68]
+- Updated dependencies [a7f42f48]
+  - @modern-js/utils@1.3.3
+
+## 1.2.2
+
+### Patch Changes
+
+- e62c4efd: fix error typo for 'styledComponents'
+
 ## 1.2.1
 
 ### Patch Changes

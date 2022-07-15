@@ -1,4 +1,5 @@
-import { merge } from 'lodash';
+import path from 'path';
+import { merge } from '@modern-js/utils/lodash';
 import { CodeSmith } from '@modern-js/codesmith';
 import { i18n } from '@modern-js/generator-common';
 import { getPackageManager } from '@modern-js/generator-utils';
@@ -10,11 +11,11 @@ interface IMonorepoNewActionOption {
   debug?: boolean;
   registry?: string;
   config?: string;
-  plugins?: string[];
+  plugin?: string[];
   cwd?: string;
 }
 
-const REPO_GENERAROE = '@modern-js/repo-generator';
+const REPO_GENERATOR = '@modern-js/repo-generator';
 
 export const MonorepoNewAction = async (options: IMonorepoNewActionOption) => {
   const {
@@ -23,7 +24,7 @@ export const MonorepoNewAction = async (options: IMonorepoNewActionOption) => {
     debug = false,
     registry = '',
     config = '{}',
-    plugins = [],
+    plugin = [],
     cwd = process.cwd(),
   } = options;
 
@@ -46,6 +47,15 @@ export const MonorepoNewAction = async (options: IMonorepoNewActionOption) => {
     smith.logger.warn('not valid modern.js repo');
   }
 
+  // Determine if the plugin is a Monorepo dependency
+  const plugins = plugin.map(plugin => {
+    try {
+      return path.join(require.resolve(plugin), '../../../../');
+    } catch (e) {
+      return plugin;
+    }
+  });
+
   const finalConfig = merge(UserConfig, {
     locale: (UserConfig.locale as string) || locale,
     packageManager: UserConfig.packageManager || (await getPackageManager(cwd)),
@@ -54,7 +64,7 @@ export const MonorepoNewAction = async (options: IMonorepoNewActionOption) => {
     plugins,
   });
 
-  let generator = REPO_GENERAROE;
+  let generator = REPO_GENERATOR;
   if (process.env.CODESMITH_ENV === 'development') {
     generator = require.resolve(generator);
   } else if (distTag) {

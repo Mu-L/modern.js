@@ -2,11 +2,11 @@ import {
   getBabelChain,
   ILibPresetOption,
   ISyntaxOption,
+  applyUserBabelConfig,
 } from '@modern-js/babel-preset-lib';
 import { TransformOptions } from '@babel/core';
-import { applyOptionsChain, fs, getAlias } from '@modern-js/utils';
+import { fs, json5, getAlias, applyOptionsChain } from '@modern-js/utils';
 import type { NormalizedConfig } from '@modern-js/core';
-import json5 from 'json5';
 
 export * from '@babel/core';
 
@@ -131,21 +131,18 @@ export const resolveBabelConfig = (
       { legacy: true },
     ]);
 
-  babelChain.plugin('@babel/plugin-proposal-class-properties').use(
-    require.resolve('@babel/plugin-proposal-class-properties'),
-
-    [{ loose: true }],
-  );
+  // resolve "Definitely assigned fields cannot be initialized here, but only in the constructor."
+  babelChain
+    .plugin('@babel/plugin-proposal-class-properties')
+    .use(require.resolve('@babel/plugin-proposal-class-properties'), [
+      {
+        loose: true,
+      },
+    ]);
 
   const internalBabelConfig = { ...babelChain.toJSON() };
 
   const userBabelConfig = modernConfig.tools.babel;
-  applyOptionsChain(
-    internalBabelConfig,
-    // TODO: 感觉 userBabelConfig 的类型应该是TransformOptions
-    userBabelConfig as any,
-    { chain: babelChain },
-  );
 
-  return internalBabelConfig;
+  return applyUserBabelConfig(internalBabelConfig, userBabelConfig);
 };

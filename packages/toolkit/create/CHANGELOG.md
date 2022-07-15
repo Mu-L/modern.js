@@ -1,5 +1,63 @@
 # @modern-js/create
 
+## 1.5.0
+
+### Minor Changes
+
+- 33cebd2: chore(plugin-i18n): merge `@modern-js/i18n-cli-language-detector` to `@modern-js/plugin-i18n`
+
+  chore(plugin-i18n): 合并 `@modern-js/i18n-cli-language-detector` 包到 `@modern-js/plugin-i18n` 包作为子路径
+
+## 1.4.5
+
+### Patch Changes
+
+- 341bb42: feat: bump codesmith package version
+
+## 1.4.4
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+- c7e38b4e6: feat: upgrade codesmith pkg version
+
+## 1.4.3
+
+### Patch Changes
+
+- d6fc58a3d: fix: create toolkit command
+
+## 1.4.2
+
+### Patch Changes
+
+- 6b0bb5e3b: feat: bump codesmith version
+
+## 1.4.1
+
+### Patch Changes
+
+- 895fa0ff: chore: using "workspace:\*" in devDependencies
+
+## 1.4.0
+
+### Minor Changes
+
+- 2b12032c: feat: upgrade csmith tools
+
+### Patch Changes
+
+- 6cffe99d: chore:
+  remove react eslint rules for `modern-js` rule set.
+  add .eslintrc for each package to speed up linting
+- 04ae5262: chore: bump @modern-js/utils to v1.4.1 in dependencies
+
+## 1.3.2
+
+### Patch Changes
+
+- 07a4887e: feat: prebundle commander and signale to @modern-js/utils
+
 ## 1.3.1
 
 ### Patch Changes

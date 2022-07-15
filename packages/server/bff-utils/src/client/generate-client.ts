@@ -21,8 +21,6 @@ export type GenClientOptions = {
 
 export const DEFAULT_CLIENT_REQUEST_CREATOR = '@modern-js/create-request';
 
-// eslint-disable-next-line eslint-comments/disable-enable-pair
-/* eslint-disable max-statements */
 export const generateClient = async ({
   resourcePath,
   source,
@@ -52,9 +50,9 @@ export const generateClient = async ({
     );
   }
 
-  const routeRsult = getRouteName(resourcePath, apiDir);
-  if (routeRsult.isErr) {
-    return routeRsult;
+  const routeResult = getRouteName(resourcePath, apiDir);
+  if (routeResult.isErr) {
+    return routeResult;
   }
 
   const checkSourceResult = await checkSource(source);
@@ -62,7 +60,7 @@ export const generateClient = async ({
     return Err(checkSourceResult.value);
   }
 
-  const routeName = prefix + routeRsult.value;
+  const routeName = prefix + routeResult.value;
   let handlersCode = '';
   for (const name of checkSourceResult.value) {
     const result = getMethodAndStatementFromName(name);

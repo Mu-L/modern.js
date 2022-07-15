@@ -2,7 +2,7 @@ import { createDebugger } from '@modern-js/utils';
 import { Plugin as RollupPlugin } from 'rollup';
 import { codeFrameColumns } from '@babel/code-frame';
 import { transform } from 'esbuild';
-import { IAppContext, NormalizedConfig } from '@modern-js/core';
+import type { IAppContext, NormalizedConfig } from '@modern-js/core';
 import { isJsRequest, getEsbuildLoader } from '../utils';
 import { DEV_CLIENT_PATH, GLOBAL_CACHE_DIR_NAME } from '../constants';
 
@@ -37,7 +37,7 @@ export const esbuildPlugin = (
       // match: import React from 'react'
       /import\s+React(,\s*{[^'"]*})?\s*from\s+['"]react['"]/,
       // match: import * from 'react'
-      /import\s+\*\s+as\s+React\s+from\s+['"]react['"]/,
+      /import\s*\*\s*as\s+React\s+from\s*['"]react['"]/,
       // React is already defined, avoid conflict: var React =
       /(const|var|let)\s+React\s*=/,
     ]

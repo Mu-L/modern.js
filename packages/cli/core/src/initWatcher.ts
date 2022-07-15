@@ -1,10 +1,9 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
-import { isDev, createDebugger, isTest } from '@modern-js/utils';
-import chokidar from 'chokidar';
+import { isDev, chokidar, createDebugger, isTest } from '@modern-js/utils';
 import { LoadedConfig } from './config';
-import { HooksRunner } from '.';
+import { HooksRunner } from './manager';
 
 const debug = createDebugger('watch-files');
 
@@ -29,7 +28,7 @@ export const initWatcher = async (
 
     const watched = [
       `${configPath}/html`,
-      ...(extraFiles as any),
+      ...extraFiles,
       loaded?.filePath,
       ...loaded.dependencies,
     ].filter(Boolean);
@@ -38,6 +37,7 @@ export const initWatcher = async (
 
     const watcher = chokidar.watch(watched, {
       cwd: appDirectory,
+      ignoreInitial: true,
       ignorePermissionErrors: true,
       ignored: [
         /node_modules/,

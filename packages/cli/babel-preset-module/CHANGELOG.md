@@ -1,5 +1,137 @@
 # @modern-js/babel-preset-module
 
+## 1.4.0
+
+### Minor Changes
+
+- 33cebd2: chore(babel-chain): merge `@modern-js/babel-chain` to `@modern-js/babel-preset-base`
+
+  chore(babel-chain): 合并 `@modern-js/babel-chain` 到 `@modern-js/babel-preset-base`
+
+### Patch Changes
+
+- Updated dependencies [33cebd2]
+  - @modern-js/babel-preset-lib@1.4.0
+  - @modern-js/utils@1.7.12
+
+## 1.3.11
+
+### Patch Changes
+
+- ff3ba0220: fix(babel-preset-module): babel transform import path of the style file or the static file
+
+  fix(babel-preset-module): 修复 Babel 在转换导入样式文件或者静态文件的路径出现的问题
+
+## 1.3.10
+
+### Patch Changes
+
+- nothing happen, only bump
+- Updated dependencies
+  - @modern-js/utils@1.7.11
+
+## 1.3.9
+
+### Patch Changes
+
+- b82869d: remove path check and support staticDir and styleDir
+- Updated dependencies [b82869d]
+  - @modern-js/utils@1.7.10
+
+## 1.3.8
+
+### Patch Changes
+
+- b7a1cea52: feat: support utils in tools.babel
+- Updated dependencies [9377d2d9d]
+- Updated dependencies [8c9ad1749]
+- Updated dependencies [b7a1cea52]
+  - @modern-js/utils@1.7.7
+  - @modern-js/babel-preset-lib@1.3.1
+
+## 1.3.7
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+- Updated dependencies [a1198d509]
+- Updated dependencies [a1198d509]
+  - @modern-js/babel-preset-lib@1.3.0
+  - @modern-js/babel-chain@1.2.5
+
+## 1.3.6
+
+### Patch Changes
+
+- b02a4c35: fix: fix missing peer deps
+- Updated dependencies [6451a098]
+- Updated dependencies [b02a4c35]
+- Updated dependencies [d5a2cfd8]
+- Updated dependencies [437367c6]
+  - @modern-js/utils@1.7.6
+  - @modern-js/babel-preset-lib@1.2.7
+
+## 1.3.5
+
+### Patch Changes
+
+- d32f35134: chore: add modern/jest/eslint/ts config files to .npmignore
+- Updated dependencies [f1ca8eb83]
+- Updated dependencies [d32f35134]
+- Updated dependencies [6ae4a34ae]
+- Updated dependencies [b80229c79]
+- Updated dependencies [948cc4436]
+  - @modern-js/babel-preset-lib@1.2.5
+  - @modern-js/babel-chain@1.2.3
+  - @modern-js/utils@1.7.3
+
+## 1.3.4
+
+### Patch Changes
+
+- 0e0537005: fix: unlock @babel/core version
+- 69a728375: fix: remove exports.jsnext:source after publish
+- Updated dependencies [cd7346b0d]
+- Updated dependencies [0e0537005]
+- Updated dependencies [69a728375]
+  - @modern-js/utils@1.7.2
+  - @modern-js/babel-preset-lib@1.2.4
+
+## 1.3.3
+
+### Patch Changes
+
+- f9f66ef9: fix import static path in window env
+- Updated dependencies [2d155c4c]
+- Updated dependencies [123e432d]
+- Updated dependencies [e5a9b26d]
+- Updated dependencies [0b26b93b]
+- Updated dependencies [123e432d]
+- Updated dependencies [f9f66ef9]
+- Updated dependencies [592edabc]
+- Updated dependencies [895fa0ff]
+- Updated dependencies [3578913e]
+- Updated dependencies [1c3beab3]
+  - @modern-js/utils@1.6.0
+
+## 1.3.2
+
+### Patch Changes
+
+- 6cffe99d: chore:
+  remove react eslint rules for `modern-js` rule set.
+  add .eslintrc for each package to speed up linting
+- 04ae5262: chore: bump @modern-js/utils to v1.4.1 in dependencies
+- 60f7d8bf: feat: add tests dir to npmignore
+- Updated dependencies [b8599d09]
+- Updated dependencies [6cffe99d]
+- Updated dependencies [04ae5262]
+- Updated dependencies [60f7d8bf]
+- Updated dependencies [3bf4f8b0]
+  - @modern-js/utils@1.5.0
+  - @modern-js/babel-preset-lib@1.2.3
+  - @modern-js/babel-chain@1.2.2
+
 ## 1.3.1
 
 ### Patch Changes

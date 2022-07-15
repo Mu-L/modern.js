@@ -1,5 +1,268 @@
 # @modern-js/plugin-bff
 
+## 1.6.2
+
+### Patch Changes
+
+- a27ab8d: feat: add onApiChange hook for bff hot reload
+  feat: 为 BFF 热更新优化，添加 onApiChange 钩子
+- Updated dependencies [a27ab8d]
+  - @modern-js/bff-core@1.1.2
+  - @modern-js/server-utils@1.2.11
+  - @modern-js/utils@1.7.12
+
+## 1.6.1
+
+### Patch Changes
+
+- d86f009: feat: optimize implentation of registerModernRuntimePath
+- Updated dependencies [dc4676b]
+- Updated dependencies [d86f009]
+  - @modern-js/utils@1.7.12
+  - @modern-js/bff-core@1.1.1
+
+## 1.6.0
+
+### Minor Changes
+
+- 77a8e9e: feat: support bff operators
+
+### Patch Changes
+
+- f29e9ba: feat: simplify context usage, no longer depend on containers
+- 6eebd9c: fix: resolve server runtime alias for esbuild-register
+- Updated dependencies [77a8e9e]
+- Updated dependencies [77a8e9e]
+- Updated dependencies [b220f1d]
+- Updated dependencies [7b9e302]
+- Updated dependencies [a90bc96]
+  - @modern-js/bff-core@1.1.0
+  - @modern-js/create-request@1.3.0
+  - @modern-js/utils@1.7.9
+  - @modern-js/server-utils@1.2.11
+
+## 1.5.2
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+- c1a4ead09: fix: plugin-bff should compile shared directory
+- Updated dependencies [a1198d509]
+  - @modern-js/bff-utils@1.2.9
+  - @modern-js/create-request@1.2.11
+  - @modern-js/server-utils@1.2.10
+  - @modern-js/babel-compiler@1.2.6
+
+## 1.5.1
+
+### Patch Changes
+
+- 6451a098: fix: cyclic dependencies of @modern-js/core and @moden-js/webpack
+- Updated dependencies [d57e7622]
+- Updated dependencies [6451a098]
+- Updated dependencies [bfccb4c8]
+- Updated dependencies [d5a2cfd8]
+- Updated dependencies [437367c6]
+  - @modern-js/bff-utils@1.2.8
+  - @modern-js/utils@1.7.6
+  - @modern-js/create-request@1.2.10
+  - @modern-js/server-utils@1.2.9
+
+## 1.5.0
+
+### Minor Changes
+
+- f66fa0e98: feat: support tools.webpackChain config
+
+### Patch Changes
+
+- 1dfe08fcd: feat(webpack): add CHAIN_ID constants for webpack chain
+- 41dc62010: fix: remove typings from ignore directories
+- Updated dependencies [77917e355]
+- Updated dependencies [33de0f7ec]
+  - @modern-js/server-utils@1.2.9
+  - @modern-js/utils@1.7.5
+
+## 1.4.5
+
+### Patch Changes
+
+- d32f35134: chore: add modern/jest/eslint/ts config files to .npmignore
+- Updated dependencies [d32f35134]
+- Updated dependencies [6ae4a34ae]
+- Updated dependencies [b80229c79]
+- Updated dependencies [1a30be07b]
+- Updated dependencies [948cc4436]
+  - @modern-js/bff-utils@1.2.6
+  - @modern-js/create-request@1.2.8
+  - @modern-js/server-utils@1.2.6
+  - @modern-js/babel-compiler@1.2.5
+  - @modern-js/utils@1.7.3
+
+## 1.4.4
+
+### Patch Changes
+
+- 0e0537005: fix: unlock @babel/core version
+- 69a728375: fix: remove exports.jsnext:source after publish
+- Updated dependencies [cd7346b0d]
+- Updated dependencies [0e0537005]
+- Updated dependencies [69a728375]
+  - @modern-js/utils@1.7.2
+  - @modern-js/server-utils@1.2.5
+  - @modern-js/babel-compiler@1.2.4
+  - @modern-js/bff-utils@1.2.5
+  - @modern-js/create-request@1.2.7
+
+## 1.4.3
+
+### Patch Changes
+
+- 0ee4bb4e: fix: remove loader-utils from dependencies
+- Updated dependencies [4697d1db]
+- Updated dependencies [0ee4bb4e]
+- Updated dependencies [6fa74d5f]
+  - @modern-js/create-request@1.2.6
+  - @modern-js/utils@1.7.0
+  - @modern-js/server-utils@1.2.4
+
+## 1.4.2
+
+### Patch Changes
+
+- 895fa0ff: chore: using "workspace:\*" in devDependencies
+- Updated dependencies [2d155c4c]
+- Updated dependencies [123e432d]
+- Updated dependencies [e5a9b26d]
+- Updated dependencies [0b26b93b]
+- Updated dependencies [123e432d]
+- Updated dependencies [f9f66ef9]
+- Updated dependencies [592edabc]
+- Updated dependencies [895fa0ff]
+- Updated dependencies [3578913e]
+- Updated dependencies [0fccff68]
+- Updated dependencies [1c3beab3]
+  - @modern-js/utils@1.6.0
+  - @modern-js/bff-utils@1.2.4
+  - @modern-js/server-utils@1.2.4
+  - @modern-js/create-request@1.2.5
+
+## 1.4.1
+
+### Patch Changes
+
+- 04ae5262: chore: bump @modern-js/utils to v1.4.1 in dependencies
+- 60f7d8bf: feat: add tests dir to npmignore
+- e4cec1ce: types: fix config hook type
+- Updated dependencies [b8599d09]
+- Updated dependencies [6cffe99d]
+- Updated dependencies [04ae5262]
+- Updated dependencies [60f7d8bf]
+- Updated dependencies [3bf4f8b0]
+  - @modern-js/utils@1.5.0
+  - @modern-js/bff-utils@1.2.3
+  - @modern-js/server-utils@1.2.3
+  - @modern-js/babel-compiler@1.2.3
+  - @modern-js/create-request@1.2.4
+
+## 1.4.0
+
+### Minor Changes
+
+- d2d1d6b2: feat: support server config
+
+### Patch Changes
+
+- d2d1d6b2: feat: add prepare hook
+- Updated dependencies [77ff9754]
+- Updated dependencies [d2d1d6b2]
+- Updated dependencies [07a4887e]
+- Updated dependencies [ea2ae711]
+- Updated dependencies [17d0cc46]
+- Updated dependencies [d2d1d6b2]
+  - @modern-js/utils@1.4.0
+  - @modern-js/server-utils@1.2.2
+
+## 1.3.9
+
+### Patch Changes
+
+- bebb39b6: chore: improve devDependencies and peerDependencies
+- 132f7b53: feat: move config declarations to @modern-js/core
+- Updated dependencies [bebb39b6]
+- Updated dependencies [132f7b53]
+  - @modern-js/server-utils@1.2.2
+  - @modern-js/utils@1.3.7
+
+## 1.3.8
+
+### Patch Changes
+
+- c1b8fa0a: feat: convert to new server plugin
+- Updated dependencies [c2046f37]
+  - @modern-js/utils@1.3.6
+
+## 1.3.6
+
+### Patch Changes
+
+- 3eee457b: fix: move some peerDependencies to dependecies
+- Updated dependencies [cc5e8001]
+- Updated dependencies [2520ea86]
+- Updated dependencies [3eee457b]
+- Updated dependencies [db43dce6]
+- Updated dependencies [e81fd9b7]
+- Updated dependencies [1c411e71]
+  - @modern-js/core@1.4.6
+  - @modern-js/create-request@1.2.2
+  - @modern-js/utils@1.3.4
+
+## 1.3.5
+
+### Patch Changes
+
+- 55e18278: chore: remove unused dependencies and devDependencies
+- bdcf0865: fix: add default types for plugin bff
+- bdcf0865: fix: Ignore \*.test.ts files for api dir build
+- Updated dependencies [969f172f]
+- Updated dependencies [4c792f68]
+- Updated dependencies [4b5d4bf4]
+- Updated dependencies [62f5b8c8]
+- Updated dependencies [55e18278]
+- Updated dependencies [4499a674]
+- Updated dependencies [403f5169]
+- Updated dependencies [a7f42f48]
+  - @modern-js/core@1.4.4
+  - @modern-js/utils@1.3.3
+  - @modern-js/babel-compiler@1.2.2
+
+## 1.3.4
+
+### Patch Changes
+
+- 8f24a514: fix: allow reference typings to index file
+- Updated dependencies [deeaa602]
+- Updated dependencies [54786e58]
+  - @modern-js/utils@1.3.2
+  - @modern-js/core@1.4.3
+
+## 1.3.3
+
+### Patch Changes
+
+- 272cab15: refactor server plugin manager
+- Updated dependencies [d9cc5ea9]
+- Updated dependencies [bd819a8d]
+- Updated dependencies [ec4dbffb]
+- Updated dependencies [d099e5c5]
+- Updated dependencies [bada2879]
+- Updated dependencies [24f616ca]
+- Updated dependencies [bd819a8d]
+- Updated dependencies [272cab15]
+  - @modern-js/core@1.4.0
+  - @modern-js/utils@1.3.0
+  - @modern-js/server-core@1.2.2
+
 ## 1.3.2
 
 ### Patch Changes

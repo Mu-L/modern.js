@@ -1,24 +1,23 @@
 import { Import } from '@modern-js/utils';
+import type { CliPlugin } from '@modern-js/core';
 
-const core: typeof import('@modern-js/core') = Import.lazy(
-  '@modern-js/core',
-  require,
-);
 const features: typeof import('./features') = Import.lazy(
   './features',
   require,
 );
 
-export default core.createPlugin(
-  () => ({
-    commands({ program }: any) {
-      const { appDirectory, internalDirectory } = core.useAppContext();
+export default (): CliPlugin => ({
+  name: '@modern-js/plugin-docsite',
+  setup: api => ({
+    commands({ program }) {
+      const appContext = api.useAppContext();
+      const modernConfig = api.useResolvedConfigContext();
       const devCommand = program.commandsMap.get('dev');
       if (devCommand) {
         devCommand.command('docs').action(async () => {
           await features.buildDocs({
-            appDirectory,
-            internalDirectory,
+            appContext,
+            modernConfig,
             isDev: true,
           });
         });
@@ -26,12 +25,19 @@ export default core.createPlugin(
     },
     // module-tools menu mode
     moduleToolsMenu() {
-      const { appDirectory, internalDirectory } = core.useAppContext();
+      const appContext = api.useAppContext();
+      const modernConfig = api.useResolvedConfigContext();
+      const { port } = appContext;
       return {
         name: 'Docsite 调试',
         value: 'docsite',
         runTask: async () =>
-          features.buildDocs({ appDirectory, internalDirectory, isDev: true }),
+          features.buildDocs({
+            appContext,
+            modernConfig,
+            isDev: true,
+            port,
+          }),
       };
     },
     platformBuild() {
@@ -43,5 +49,4 @@ export default core.createPlugin(
       };
     },
   }),
-  { name: '@modern-js/plugin-docsite' },
-);
+});

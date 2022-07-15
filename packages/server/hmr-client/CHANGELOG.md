@@ -1,5 +1,75 @@
 # @modern-js/hmr-client
 
+## 1.2.8
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+
+## 1.2.7
+
+### Patch Changes
+
+- d32f35134: chore: add modern/jest/eslint/ts config files to .npmignore
+- aeda91deb: fix: remove deprecated url.format
+- Updated dependencies [d32f35134]
+- Updated dependencies [6ae4a34ae]
+- Updated dependencies [b80229c79]
+- Updated dependencies [948cc4436]
+  - @modern-js/utils@1.7.3
+
+## 1.2.6
+
+### Patch Changes
+
+- 69a728375: fix: remove exports.jsnext:source after publish
+- Updated dependencies [cd7346b0d]
+- Updated dependencies [69a728375]
+  - @modern-js/utils@1.7.2
+
+## 1.2.5
+
+### Patch Changes
+
+- 6cffe99d: chore:
+  remove react eslint rules for `modern-js` rule set.
+  add .eslintrc for each package to speed up linting
+- 04ae5262: chore: bump @modern-js/utils to v1.4.1 in dependencies
+- 60f7d8bf: feat: add tests dir to npmignore
+- Updated dependencies [b8599d09]
+- Updated dependencies [60f7d8bf]
+- Updated dependencies [3bf4f8b0]
+  - @modern-js/utils@1.5.0
+
+## 1.2.4
+
+### Patch Changes
+
+- df75e1d8: fix: should not bundle all utils
+- Updated dependencies [77ff9754]
+- Updated dependencies [d2d1d6b2]
+- Updated dependencies [07a4887e]
+- Updated dependencies [ea2ae711]
+- Updated dependencies [17d0cc46]
+- Updated dependencies [d2d1d6b2]
+  - @modern-js/utils@1.4.0
+
+## 1.2.3
+
+### Patch Changes
+
+- afc836f4: fix: remove react-error-overlay
+- Updated dependencies [132f7b53]
+  - @modern-js/utils@1.3.7
+
+## 1.2.2
+
+### Patch Changes
+
+- deeaa602: support svg/proxy/multi-version in unbundled
+- Updated dependencies [deeaa602]
+  - @modern-js/utils@1.3.2
+
 ## 1.2.1
 
 ### Patch Changes

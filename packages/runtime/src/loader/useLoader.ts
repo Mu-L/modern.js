@@ -12,6 +12,7 @@ import { Loader, LoaderStatus, LoaderResult } from './loaderManager';
 
 export interface SSRData {
   loadersData: Record<string, LoaderResult | undefined>;
+  initialData?: Record<string, unknown>;
 }
 export interface SSRContainer {
   data?: SSRData;
@@ -43,18 +44,18 @@ export interface LoaderOptions<
   initialData?: TData;
 
   /**
-   * wheather skip loader
+   * whether skip loader
    * if true, the loader will not exec.
    */
   skip?: boolean;
 
   /**
-   * User params, it will bypass to loader's second parameter.
+   * User params, it will pass to loader's second parameter.
    */
   params?: Params;
 
   /**
-   * wheather loader can exec on build phase.
+   * whether loader can exec on build phase.
    */
   static?: boolean;
 }
@@ -73,6 +74,11 @@ const useLoader = <TData = any, Params = any, E = any>(
   const loaderRef = useRef<Loader>();
   const unlistenLoaderChangeRef = useRef<(() => void) | null>(null);
 
+  // SSR render should ignore `_cache` prop
+  if (isSSRRender && Object.prototype.hasOwnProperty.call(options, '_cache')) {
+    delete (options as any)._cache;
+  }
+
   const load = useCallback(
     (params?: Params) => {
       if (typeof params === 'undefined') {
@@ -90,7 +96,7 @@ const useLoader = <TData = any, Params = any, E = any>(
 
             return Promise.resolve(res);
           } catch (e) {
-            return Promise.reject(e instanceof Error ? e.message : e);
+            return Promise.reject(e);
           }
         },
         {
@@ -100,15 +106,15 @@ const useLoader = <TData = any, Params = any, E = any>(
       );
 
       loaderRef.current = loaderManager.get(id)!;
+      // unsubscribe old loader onChange event
+      unlistenLoaderChangeRef.current?.();
 
       if (isSSRRender) {
-        unlistenLoaderChangeRef.current?.();
         return undefined;
       }
 
       // skip this loader, then try to unlisten loader change
       if (options.skip) {
-        unlistenLoaderChangeRef.current?.();
         return undefined;
       }
 
@@ -117,14 +123,11 @@ const useLoader = <TData = any, Params = any, E = any>(
         context._hydration &&
         window?._SSR_DATA?.data?.loadersData[id]?.error === null
       ) {
-        unlistenLoaderChangeRef.current?.();
         return undefined;
       }
 
       const res = loaderRef.current.load();
 
-      // unlisten old loader, and subsribe to new loader
-      unlistenLoaderChangeRef.current?.();
       unlistenLoaderChangeRef.current = loaderRef.current?.onChange(
         (_status, _result) => {
           setResult(_result);

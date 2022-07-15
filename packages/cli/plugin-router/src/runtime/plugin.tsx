@@ -7,9 +7,9 @@ import {
   HashHistoryBuildOptions,
 } from 'history';
 import { Router, StaticRouter, RouteProps } from 'react-router-dom';
-import { createPlugin, RuntimeReactContext } from '@modern-js/runtime-core';
+import { RuntimeReactContext } from '@modern-js/runtime-core';
+import type { Plugin } from '@modern-js/runtime-core';
 import hoistNonReactStatics from 'hoist-non-react-statics';
-import { BaseSSRServerContext } from '@modern-js/types';
 import { renderRoutes, getLocation, urlJoin } from './utils';
 
 declare global {
@@ -61,76 +61,87 @@ export type RouterConfig = Partial<HistoryConfig> & {
 // todo: check
 const isBrowser = () => typeof window !== 'undefined';
 
-export const routerPlugin: any = ({
+export const routerPlugin = ({
   serverBase = [],
   history: customHistory,
   supportHtml5History = true,
   routesConfig,
   historyOptions = {},
-}: RouterConfig) => {
+}: RouterConfig): Plugin => {
   const isBrow = isBrowser();
 
   const select = (pathname: string) =>
     serverBase.find(baseUrl => pathname.search(baseUrl) === 0) || '/';
+  return {
+    name: '@modern-js/plugin-router',
+    setup: () => {
+      return {
+        hoc: ({ App }, next) => {
+          const getRouteApp = () => {
+            if (isBrow) {
+              const baseUrl =
+                window._SERVER_DATA?.router.baseUrl ||
+                select(location.pathname);
+              historyOptions.basename =
+                baseUrl === '/'
+                  ? urlJoin(baseUrl, historyOptions.basename as string)
+                  : baseUrl;
 
-  return createPlugin(
-    () => ({
-      hoc: ({ App }, next) => {
-        const getRouteApp = () => {
-          if (isBrow) {
-            historyOptions.basename = urlJoin(
-              window._SERVER_DATA?.router.baseUrl || select(location.pathname),
-              historyOptions.basename as string,
-            );
+              const history =
+                customHistory ||
+                (supportHtml5History
+                  ? createBrowserHistory(historyOptions)
+                  : createHashHistory(historyOptions));
 
-            const history =
-              customHistory || supportHtml5History
-                ? createBrowserHistory(historyOptions)
-                : createHashHistory(historyOptions);
+              return (props: any) => (
+                <Router history={history}>
+                  <App {...props}>
+                    {routesConfig ? renderRoutes(routesConfig, props) : null}
+                  </App>
+                </Router>
+              );
+            }
+            return (props: any) => {
+              const runtimeContext = useContext(RuntimeReactContext);
+              const { ssrContext } = runtimeContext;
+              const location = getLocation(ssrContext);
+              const routerContext = ssrContext?.redirection || {};
+              const request = ssrContext?.request;
+              const baseUrl = request?.baseUrl as string;
+              const basename =
+                baseUrl === '/'
+                  ? urlJoin(baseUrl, historyOptions.basename as string)
+                  : baseUrl;
+              return (
+                <StaticRouter
+                  basename={basename === '/' ? '' : basename}
+                  location={location}
+                  context={routerContext}
+                >
+                  <App {...props}>
+                    {routesConfig ? renderRoutes(routesConfig, props) : null}
+                  </App>
+                </StaticRouter>
+              );
+            };
+          };
+          let RouteApp = getRouteApp();
 
-            return (props: any) => (
-              <Router history={history}>
-                {routesConfig ? (
-                  renderRoutes(routesConfig, props)
-                ) : (
-                  <App {...props} />
-                )}
-              </Router>
-            );
+          if (App) {
+            RouteApp = hoistNonReactStatics(RouteApp, App);
           }
 
-          return (props: any) => {
-            const runtimeContext = useContext(RuntimeReactContext);
-            const { ssrContext }: { ssrContext?: BaseSSRServerContext } =
-              runtimeContext;
-            const location = getLocation(ssrContext);
-            const routerContext = ssrContext?.redirection || {};
-            const request = ssrContext?.request;
-            const basename = urlJoin(
-              request?.baseUrl as string,
-              historyOptions.basename as string,
-            );
+          if (routesConfig?.globalApp) {
+            return next({
+              App: hoistNonReactStatics(RouteApp, routesConfig.globalApp),
+            });
+          }
 
-            return (
-              <StaticRouter
-                basename={basename}
-                location={location}
-                context={routerContext}>
-                {routesConfig ? (
-                  renderRoutes(routesConfig, props)
-                ) : (
-                  <App {...props} />
-                )}
-              </StaticRouter>
-            );
-          };
-        };
-
-        return next({
-          App: App ? hoistNonReactStatics(getRouteApp(), App) : getRouteApp(),
-        });
-      },
-    }),
-    { name: `@modern-js/plugin-router` },
-  );
+          return next({
+            App: RouteApp,
+          });
+        },
+      };
+    },
+  };
 };

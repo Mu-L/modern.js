@@ -1,64 +1,58 @@
 import {
+  Setup,
   createManager,
   createWaterfall,
   createWorkflow,
   createContext,
+  PluginOptions,
 } from '../../../../src';
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type CTX = {};
+export type CTX = Record<string, unknown>;
 const defaultContext = {};
 const CTXContext = createContext<CTX>(defaultContext);
 export const useContext = (): CTX => {
   const context = CTXContext.use().value;
 
   if (!context) {
-    // eslint-disable-next-line @typescript-eslint/no-base-to-string,@typescript-eslint/restrict-template-expressions
     throw new Error(`Expected modern context, but got: ${context}`);
   }
 
   return context;
 };
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type Config = {};
+export type Config = Record<string, unknown>;
 const defaultConfig = {};
 const ConfigContext = createContext<Config>(defaultConfig);
 export const useConfig = (): Config => {
   const config = ConfigContext.use().value;
 
   if (!config) {
-    // eslint-disable-next-line @typescript-eslint/no-base-to-string,@typescript-eslint/restrict-template-expressions
     throw new Error(`Expected modern config, but got: ${config}`);
   }
 
   return config;
 };
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type WebpackConfig = {};
+export type WebpackConfig = Record<string, unknown>;
 const defaultWebpackConfig = {};
 const WebpackConfigContext = createContext<WebpackConfig>(defaultWebpackConfig);
 export const useWebpackConfig = (): WebpackConfig => {
   const webpackConfig = WebpackConfigContext.use().value;
 
   if (!webpackConfig) {
-    // eslint-disable-next-line @typescript-eslint/no-base-to-string,@typescript-eslint/restrict-template-expressions
     throw new Error(`Expected webpack config, but got: ${webpackConfig}`);
   }
 
   return webpackConfig;
 };
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type BabelConfig = {};
+export type BabelConfig = Record<string, unknown>;
 const defaultBabelConfig = {};
 const BabelConfigContext = createContext<BabelConfig>(defaultBabelConfig);
 export const useBabelConfig = (): BabelConfig => {
   const babelConfig = BabelConfigContext.use().value;
 
   if (!babelConfig) {
-    // eslint-disable-next-line @typescript-eslint/no-base-to-string,@typescript-eslint/restrict-template-expressions
     throw new Error(`Expected babel config, but got: ${babelConfig}`);
   }
 
@@ -89,7 +83,7 @@ const config = createWaterfall<{
 export interface ExternalProgress {}
 
 // main process
-const lifecircle = {
+const lifecycle = {
   prepare,
   config,
 
@@ -99,9 +93,12 @@ const lifecircle = {
   preBuild,
   postBuild,
 };
-export const main = createManager<ExternalProgress, typeof lifecircle>(
-  lifecircle,
-);
+
+export type TestHooks = ExternalProgress & typeof lifecycle;
+
+export const main = createManager<TestHooks>(lifecycle);
+
+export type TestPlugin = PluginOptions<TestHooks, Setup<TestHooks>>;
 
 export const { createPlugin } = main;
 
@@ -111,30 +108,25 @@ export const { usePlugin } = main;
 
 export const initPlugins = main.init;
 
-export const registeManager = main.registe;
+export const { registerHook } = main;
 
 export const { useRunner } = main;
 
 export const develop = (context: CTX) => {
   const runner = main.init();
 
-  main.run(() => {
-    CTXContext.set(context);
-  });
+  CTXContext.set(context);
   runner.prepare();
 
-  // eslint-disable-next-line @typescript-eslint/no-shadow
   const { config, webpackConfig, babelConfig } = runner.config({
     config: defaultConfig,
     webpackConfig: defaultWebpackConfig,
     babelConfig: defaultBabelConfig,
   });
 
-  main.run(() => {
-    ConfigContext.set(config);
-    WebpackConfigContext.set(webpackConfig);
-    BabelConfigContext.set(babelConfig);
-  });
+  ConfigContext.set(config);
+  WebpackConfigContext.set(webpackConfig);
+  BabelConfigContext.set(babelConfig);
   runner.preDev();
   runner.postDev();
 };
@@ -142,23 +134,18 @@ export const develop = (context: CTX) => {
 export const build = (context: CTX) => {
   const runner = main.init();
 
-  main.run(() => {
-    CTXContext.set(context);
-  });
+  CTXContext.set(context);
   runner.prepare();
 
-  // eslint-disable-next-line @typescript-eslint/no-shadow
   const { config, webpackConfig, babelConfig } = runner.config({
     config: defaultConfig,
     webpackConfig: defaultWebpackConfig,
     babelConfig: defaultBabelConfig,
   });
 
-  main.run(() => {
-    ConfigContext.set(config);
-    WebpackConfigContext.set(webpackConfig);
-    BabelConfigContext.set(babelConfig);
-  });
+  ConfigContext.set(config);
+  WebpackConfigContext.set(webpackConfig);
+  BabelConfigContext.set(babelConfig);
 
   runner.preBuild();
 

@@ -1,4 +1,4 @@
-import { NormalizedConfig } from '@modern-js/core';
+import type { NormalizedConfig } from '@modern-js/core';
 import MagicString from 'magic-string';
 import { Plugin as RollupPlugin } from 'rollup';
 
@@ -9,7 +9,7 @@ export const definePlugin = (config: NormalizedConfig): RollupPlugin => {
 
   const replacements: Record<string, string> = {};
 
-  // replace porcess.env.xxx
+  // replace process.env.xxx
   for (const key of [
     ...loadClientEnv(),
     ...(envVars || []),

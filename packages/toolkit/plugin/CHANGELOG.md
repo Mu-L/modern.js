@@ -1,5 +1,75 @@
 # @modern-js/plugin
 
+## 1.4.2
+
+### Patch Changes
+
+- 5b7a5a7: fix typo closeHooksMap => cloneHooksMap
+
+## 1.4.0
+
+### Minor Changes
+
+- f29e9ba: feat(plugin): simplify context usage, no longer depend on containers
+
+## 1.3.8
+
+### Patch Changes
+
+- b7302f781: Export some required types
+- e0e708f83: perf(app-tools): speed up modern start command
+
+## 1.3.7
+
+### Patch Changes
+
+- 1ac68424f: chore(plugin): extract same utils to shared
+
+## 1.3.6
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+
+## 1.3.5
+
+### Patch Changes
+
+- 54fa1dbd6: fix(plugin): allow multiple versions to be installed
+
+## 1.3.4
+
+### Patch Changes
+
+- d5913bd96: feat: fork farrow-pipeline to remove tslib and reduce bundle size
+- d32f35134: chore: add modern/jest/eslint/ts config files to .npmignore
+
+## 1.3.3
+
+### Patch Changes
+
+- 6cffe99d: chore:
+  remove react eslint rules for `modern-js` rule set.
+  add .eslintrc for each package to speed up linting
+- 60f7d8bf: feat: add tests dir to npmignore
+
+## 1.3.2
+
+### Patch Changes
+
+- dc88abf9: fix: should allow to use plugin without setup function
+- 0462ff77: feat: add compatible logic of plugin options with "setup" param
+
+## 1.3.0
+
+### Minor Changes
+
+- 80d8ddfe: feat: support `setup`, `registerHook`, `usePlugins` in plugin options.
+
+### Patch Changes
+
+- 491145e3: feat: allow manger.clone to override pluginAPI
+
 ## 1.2.1
 
 ### Patch Changes

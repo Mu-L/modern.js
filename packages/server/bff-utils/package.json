@@ -11,7 +11,7 @@
     "modern",
     "modern.js"
   ],
-  "version": "1.2.2",
+  "version": "1.3.0",
   "jsnext:source": "./src/index.ts",
   "types": "./src/index.ts",
   "main": "./dist/js/node/index.js",
@@ -29,25 +29,22 @@
   },
   "scripts": {
     "prepare": "pnpm build",
-    "prepublishOnly": "pnpm build -- --platform",
+    "prepublishOnly": "only-allow-pnpm && pnpm build -- --platform",
     "new": "modern new",
-    "build": "modern build",
-    "test": "jest --passWithNoTests"
+    "build": "wireit",
+    "test": "wireit"
   },
   "dependencies": {
-    "@babel/runtime": "^7",
-    "@modern-js/bff-runtime": "workspace:^1.2.1",
-    "@modern-js/plugin": "workspace:^1.2.1",
-    "@modern-js/utils": "workspace:^1.2.2",
+    "@babel/runtime": "^7.18.0",
+    "@modern-js/bff-runtime": "workspace:^1.3.0",
+    "@modern-js/plugin": "workspace:^1.4.1",
+    "@modern-js/utils": "workspace:^1.7.9",
     "es-module-lexer": "^0.4.1",
-    "farrow-api": "^1.10.9",
-    "fs-extra": "^10.0.0",
-    "globby": "^11.0.2"
+    "farrow-api": "^1.10.9"
   },
   "devDependencies": {
     "@scripts/build": "workspace:*",
-    "@types/fs-extra": "^9.0.13",
-    "@types/jest": "^26",
+    "@types/jest": "^27",
     "@types/node": "^14",
     "@types/react": "^17",
     "@types/react-dom": "^17",
@@ -65,5 +62,28 @@
     "registry": "https://registry.npmjs.org/",
     "access": "public",
     "types": "./dist/types/index.d.ts"
+  },
+  "wireit": {
+    "build": {
+      "command": "modern build",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "output": [
+        "dist/**/*"
+      ]
+    },
+    "test": {
+      "command": "jest --passWithNoTests",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json",
+        "tests/**/*"
+      ],
+      "output": []
+    }
   }
 }

@@ -11,7 +11,7 @@
     "modern",
     "modern.js"
   ],
-  "version": "1.2.1",
+  "version": "1.2.6",
   "jsnext:source": "./src/index.ts",
   "types": "./src/index.ts",
   "main": "./dist/js/node/index.js",
@@ -29,26 +29,23 @@
   },
   "scripts": {
     "prepare": "pnpm build",
-    "prepublishOnly": "pnpm build -- --platform",
+    "prepublishOnly": "only-allow-pnpm && pnpm build -- --platform",
     "new": "modern new",
-    "build": "modern build",
-    "test": "jest --passWithNoTests"
+    "build": "wireit",
+    "test": "wireit"
   },
   "dependencies": {
-    "@babel/core": "7.16.7",
-    "@babel/runtime": "^7",
-    "@modern-js/utils": "workspace:^1.2.2",
-    "chokidar": "^3.5.2",
-    "glob": "^7.1.6"
+    "@babel/core": "^7.18.0",
+    "@babel/runtime": "^7.18.0",
+    "@modern-js/utils": "workspace:^1.7.3"
   },
   "devDependencies": {
-    "@babel/plugin-transform-classes": "^7.14.9",
-    "@babel/preset-typescript": "^7",
+    "@babel/plugin-transform-classes": "^7.18.0",
+    "@babel/preset-typescript": "^7.17.12",
     "@types/babel__core": "^7.1.15",
     "@types/glob": "^7.1.4",
-    "@types/jest": "^26",
+    "@types/jest": "^27",
     "@types/node": "^14",
-    "jest-jasmine2": "^27.2.2",
     "typescript": "^4",
     "@scripts/build": "workspace:*",
     "jest": "^27",
@@ -64,5 +61,28 @@
     "registry": "https://registry.npmjs.org/",
     "access": "public",
     "types": "./dist/types/index.d.ts"
+  },
+  "wireit": {
+    "build": {
+      "command": "modern build",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "output": [
+        "dist/**/*"
+      ]
+    },
+    "test": {
+      "command": "jest --passWithNoTests",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json",
+        "tests/**/*"
+      ],
+      "output": []
+    }
   }
 }

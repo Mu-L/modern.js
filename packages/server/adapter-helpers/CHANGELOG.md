@@ -1,5 +1,46 @@
 # @modern-js/adapter-helpers
 
+## 1.3.0
+
+### Minor Changes
+
+- 77a8e9e: feat: support bff operators
+
+## 1.2.6
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+
+## 1.2.5
+
+### Patch Changes
+
+- 51c4e2566: fix: isRelative function in babel-plugin-resolver plugin can't handle windows relative path correctly
+
+## 1.2.4
+
+### Patch Changes
+
+- d32f35134: chore: add modern/jest/eslint/ts config files to .npmignore
+
+## 1.2.3
+
+### Patch Changes
+
+- 6cffe99d: chore:
+  remove react eslint rules for `modern-js` rule set.
+  add .eslintrc for each package to speed up linting
+- 60f7d8bf: feat: add tests dir to npmignore
+- befd9e5b: fix: compatible with babel-plugin-resolver's handling of relative paths on windows
+- 3bf4f8b0: feat: support start api server only
+
+## 1.2.2
+
+### Patch Changes
+
+- 55e18278: chore: remove unused dependencies and devDependencies
+
 ## 1.2.1
 
 ### Patch Changes

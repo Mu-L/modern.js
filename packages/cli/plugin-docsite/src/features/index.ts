@@ -1,5 +1,6 @@
 import path from 'path';
-import { fs, Import, logger } from '@modern-js/utils';
+import type { IAppContext, NormalizedConfig } from '@modern-js/core';
+import { fs, glob, Import, logger } from '@modern-js/utils';
 import type { Configuration } from 'webpack';
 import { valid } from './utils/valid';
 
@@ -9,23 +10,23 @@ const wp: typeof import('./utils/webpack') = Import.lazy(
   './utils/webpack',
   require,
 );
-const glob: typeof import('glob') = Import.lazy('glob', require);
 
 const DEFAULT_PORT = 5000;
 
 interface IBuildDocsParams {
-  appDirectory: string;
-  internalDirectory: string;
+  appContext: IAppContext;
+  modernConfig: NormalizedConfig;
   webpackConfig?: Configuration;
   isDev?: boolean;
   port?: number;
 }
 export async function buildDocs({
-  appDirectory,
-  internalDirectory,
+  appContext,
+  modernConfig,
   isDev = false,
   port = DEFAULT_PORT,
 }: IBuildDocsParams) {
+  const { appDirectory, internalDirectory } = appContext;
   if (!valid({ appDirectory, docsDir: 'docs' })) {
     return;
   }
@@ -44,7 +45,8 @@ export async function buildDocs({
   const tmpDir = path.join(internalDirectory, './docs');
   fs.ensureDirSync(tmpDir);
   const finalWebpackConfig = wp.generatorWebpackConfig(
-    appDirectory,
+    appContext,
+    modernConfig,
     tmpDir,
     isDev,
   );

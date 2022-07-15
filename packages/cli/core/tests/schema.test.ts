@@ -1,23 +1,21 @@
 import { patchSchema, traverseSchema } from '../src/config/schema';
 
 describe('patch schemas', () => {
-  test('should add schema succcessfully', () => {
+  test('should add schema successfully', () => {
     const schema = patchSchema([
       {
         target: 'foo',
         schema: { type: 'string' },
       },
       {
-        target: 'deploy.microFrontend.foo',
+        target: 'deploy.foo',
         schema: { type: 'number' },
       },
     ]);
 
     expect(schema.properties).toHaveProperty('foo');
 
-    expect(
-      schema.properties.deploy.properties.microFrontend.properties,
-    ).toHaveProperty('foo');
+    expect(schema.properties.deploy.properties).toHaveProperty('foo');
   });
 
   test('should throw error when node is undefined', () => {
@@ -67,7 +65,7 @@ describe('patch schemas', () => {
 });
 
 describe(`traverse schema`, () => {
-  test(`should return all avaliable keys of current schema`, () => {
+  test(`should return all available keys of current schema`, () => {
     const schema = {
       type: 'object',
       properties: {

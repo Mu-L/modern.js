@@ -1,15 +1,12 @@
 import * as path from 'path';
-import { fs, Import } from '@modern-js/utils';
+import { fs, Import, globby, fastGlob, slash } from '@modern-js/utils';
 import type { NormalizedConfig, IAppContext } from '@modern-js/core';
 
-const globby: typeof import('globby') = Import.lazy('globby', require);
-const fastGlob: typeof import('fast-glob') = Import.lazy('fast-glob', require);
 const normalizePath: typeof import('normalize-path') = Import.lazy(
   'normalize-path',
   require,
 );
 
-// eslint-disable-next-line max-statements
 export const copyTask = async (option: {
   modernConfig: NormalizedConfig;
   appContext: IAppContext;
@@ -27,7 +24,7 @@ export const copyTask = async (option: {
   try {
     // 类型暂时这样处理，待之后优化copy的逻辑
     for (const copyOption of copy as any) {
-      // 在原来的基础上，引入了类似于 copy-webpck-plugin 的 context 属性，可以设置项目根路径
+      // 在原来的基础上，引入了类似于 copy-webpack-plugin 的 context 属性，可以设置项目根路径
       const {
         context = appDirectory,
         from,
@@ -51,7 +48,7 @@ export const copyTask = async (option: {
             fromOrigin,
           );
       // 计算 glob，获取目标文件
-      const paths = await globby(glob, options);
+      const paths = await globby(slash(glob), options);
       if (!paths.length) {
         return;
       }

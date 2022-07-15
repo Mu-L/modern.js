@@ -1,7 +1,7 @@
-import Server from '@modern-js/server';
+import server from '@modern-js/prod-server';
 import { ServerRoute as ModernRoute } from '@modern-js/types';
 import portfinder from 'portfinder';
-import { NormalizedConfig } from '@modern-js/core';
+import type { NormalizedConfig } from '@modern-js/core';
 import { compatRequire } from '@modern-js/utils';
 import { makeRender } from '../libs/make';
 import { SsgRoute } from '../types';
@@ -10,7 +10,7 @@ import { CLOSE_SIGN } from './consts';
 
 type Then<T> = T extends PromiseLike<infer U> ? U : T;
 
-type ModernServer = Then<ReturnType<typeof Server>>;
+type ModernServer = Then<ReturnType<typeof server>>;
 
 const safetyRequire = (filename: string, base: string) => {
   try {
@@ -31,28 +31,33 @@ process.on('message', async (chunk: string) => {
   const context = JSON.parse(chunk as any);
   const {
     routes,
+    renderRoutes,
     options,
     appDirectory,
     plugins,
   }: {
     routes: ModernRoute[];
+    renderRoutes: ModernRoute[];
     options: NormalizedConfig;
     appDirectory: string;
     plugins: string[];
   } = context;
 
-  const instances = plugins.map(plugin => safetyRequire(plugin, appDirectory));
+  const instances = plugins.map(plugin => {
+    const mod = safetyRequire(plugin, appDirectory);
+    return mod();
+  });
 
   let modernServer: ModernServer | null = null;
   try {
-    const { server } = options;
+    const { server: serverOptions } = options;
 
     // start server in default port
-    const defaultPort = Number(process.env.PORT) || server.port;
+    const defaultPort = Number(process.env.PORT) || serverOptions.port;
     portfinder.basePort = defaultPort!;
     const port = await portfinder.getPortPromise();
 
-    modernServer = await Server({
+    modernServer = await server({
       pwd: appDirectory,
       config: options,
       routes,
@@ -73,7 +78,7 @@ process.on('message', async (chunk: string) => {
       // get server handler, render to ssr
       const render = createRender(modernServer.getRequestHandler());
       const renderPromiseAry = makeRender(
-        routes.filter(route => !route.isApi) as SsgRoute[],
+        renderRoutes as SsgRoute[],
         render,
         port,
       );

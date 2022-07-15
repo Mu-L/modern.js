@@ -1,12 +1,12 @@
+import path from 'path';
 import {
   getBabelConfig,
-  getModuleBabelChain,
+  applyUserBabelConfig,
 } from '@modern-js/babel-preset-module';
-import { TransformOptions } from '@babel/core';
-import { applyOptionsChain, getAlias } from '@modern-js/utils';
-import { NormalizedConfig } from '@modern-js/core';
-import type { BabelChain } from '@modern-js/babel-chain';
-import { IPackageModeValue, ModuleToolsConfig } from '../types';
+import { applyOptionsChain, getAlias, isUseSSRBundle } from '@modern-js/utils';
+import type { NormalizedConfig } from '@modern-js/core';
+import type { IPackageModeValue } from '../types';
+import type { BundlelessOptions, SourceMap } from '../schema/types';
 
 export const getFinalAlias: any = (
   modernConfig: NormalizedConfig,
@@ -32,6 +32,8 @@ export const getFinalAlias: any = (
 export const resolveBabelConfig = (
   appDirectory: string,
   modernConfig: NormalizedConfig,
+  sourceMap: SourceMap,
+  bundlelessOptions: Required<BundlelessOptions>,
   option: Pick<IPackageModeValue, 'syntax' | 'type'> & {
     sourceAbsDir: string;
     tsconfigPath: string;
@@ -40,8 +42,8 @@ export const resolveBabelConfig = (
   const {
     source: { envVars, globalVars, jsxTransformRuntime = 'automatic' },
     output: { importStyle },
-    tools: { lodash: userLodashOption },
-  } = modernConfig as ModuleToolsConfig;
+    tools: { lodash: userLodashOption, styledComponents },
+  } = modernConfig;
 
   // alias config
   const aliasConfig = getFinalAlias(modernConfig, {
@@ -67,6 +69,18 @@ export const resolveBabelConfig = (
       lodashOptions,
       jsxTransformRuntime,
       importStyle,
+      sourceDir: path.join(appDirectory, bundlelessOptions.sourceDir),
+      styleDir: bundlelessOptions.style.path,
+      staticDir: bundlelessOptions.static.path,
+      styledComponentsOptions: applyOptionsChain(
+        {
+          pure: true,
+          displayName: true,
+          ssr: isUseSSRBundle(modernConfig),
+          transpileTemplateLiterals: true,
+        },
+        styledComponents,
+      ),
     },
     {
       type: option.type,
@@ -76,29 +90,8 @@ export const resolveBabelConfig = (
 
   // Preventing warning when files are too large
   internalBabelConfig.compact = false;
+  internalBabelConfig.sourceMaps = sourceMap === 'external' ? true : sourceMap;
 
-  const babelChain = getModuleBabelChain(
-    {
-      appDirectory,
-      enableReactPreset: true,
-      enableTypescriptPreset: true,
-      alias: aliasConfig,
-      envVars,
-      globalVars,
-      lodashOptions,
-      jsxTransformRuntime,
-      importStyle,
-    },
-    {
-      type: option.type,
-      syntax: option.syntax,
-    },
-  );
   const userBabelConfig = modernConfig.tools.babel;
-  return applyOptionsChain<TransformOptions, { chain: BabelChain }>(
-    internalBabelConfig,
-    // TODO: 感觉 userBabelConfig 的类型应该是TransformOptions
-    userBabelConfig as any,
-    { chain: babelChain },
-  );
+  return applyUserBabelConfig(internalBabelConfig, userBabelConfig);
 };

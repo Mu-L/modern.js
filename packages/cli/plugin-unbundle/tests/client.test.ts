@@ -5,7 +5,6 @@ const { __addQuery__, updateStyle, removeStyle } = require('../src/client');
 
 // const MockedWebSocket = jest.mocked(WebSocket);
 
-// eslint-disable-next-line max-statements
 describe('plugin-unbundled client test', () => {
   let OriginalWebSocket: any;
   let originalLocation: any;
@@ -136,7 +135,7 @@ describe('plugin-unbundled client test', () => {
 
       // initialization is already tested by previous test
       createdWebSocket.onclose!(new CloseEvent('test close'));
-      // do not immediatly reconnect, wait a while
+      // do not immediately reconnect, wait a while
       expect(jest.mocked(WebSocket)).not.toHaveBeenCalled();
       jest.advanceTimersByTime(someLongTimeDuration);
       expect(jest.mocked(WebSocket)).toHaveBeenCalled();
@@ -259,7 +258,6 @@ describe('plugin-unbundled client test', () => {
   });
 
   it('test "createHotContext"', () => {
-    // eslint-disable-next-line max-statements
     jest.isolateModules(() => {
       const { createHotContext } = require('../src/client');
       const hotmodule = createHotContext('myModule');

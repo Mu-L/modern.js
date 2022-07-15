@@ -1,5 +1,136 @@
 # @modern-js/module-generator
 
+## 2.1.3
+
+### Patch Changes
+
+- 74e74ee: feat: update codesmith json api version
+
+  feat: 升级 `@modern-js/codesmith-api-json` 版本
+
+## 2.1.2
+
+### Patch Changes
+
+- f148a23: feat: add gen-release-note command to generator template
+
+## 2.1.1
+
+### Patch Changes
+
+- eeedc80: feat: add plugin-jarvis to dependencies of solutions
+- 341bb42: feat: bump codesmith package version
+
+## 2.1.0
+
+### Minor Changes
+
+- 50eea41ee: feat: add change status command
+
+## 2.0.4
+
+### Patch Changes
+
+- bcd95a00b: feat: support custom solution generator success info
+- bcd95a00b: fix: optimize solution generator success info
+
+## 2.0.3
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+- c7e38b4e6: feat: upgrade codesmith pkg version
+
+## 2.0.2
+
+### Patch Changes
+
+- a4584574: fix(generators): remove adapters from files.exclude and .gitignore
+
+## 2.0.1
+
+### Patch Changes
+
+- 9ddd004b8: feat: generator template add husky package
+
+## 2.0.0
+
+### Major Changes
+
+- 320067e9a: perf: replace del-cli with rimraf
+
+### Patch Changes
+
+- b38c6f267: fix: eslint template
+- 6b0bb5e3b: feat: bump codesmith version
+
+## 1.4.1
+
+### Patch Changes
+
+- 895fa0ff: chore: using "workspace:\*" in devDependencies
+
+## 1.4.0
+
+### Minor Changes
+
+- 5f4eb1ec: fix: js generator problem
+- d1480a35: feat: remove generator's .npmrc file
+- 2b12032c: feat: upgrade csmith tools
+- a4330c73: feat: adjust generator eslint and tsconig file
+
+### Patch Changes
+
+- 6cffe99d: chore:
+  remove react eslint rules for `modern-js` rule set.
+  add .eslintrc for each package to speed up linting
+- 60f7d8bf: feat: add tests dir to npmignore
+
+## 1.3.9
+
+### Patch Changes
+
+- 6c651ee7: fix: lint-staged warning
+
+## 1.3.8
+
+### Patch Changes
+
+- 8491b6dd: fix: optimise "types" exports from plugin
+
+## 1.3.7
+
+### Patch Changes
+
+- ee1458dd: fix: remove module generator @types/react-dom dependence
+
+## 1.3.6
+
+### Patch Changes
+
+- edc3bd3d: fix: @modern-js/core package not found
+
+## 1.3.5
+
+### Patch Changes
+
+- 6668a1bf: feat: adjust module template tests directory
+- 6668a1bf: feat: upgrade @modern-js/codesmith-api-app version
+- 9e0aed14: feat: add modern config file when create project
+- fab92861: fix: @modern-js/core phantom dep
+
+## 1.3.4
+
+### Patch Changes
+
+- 389e8bca: fix: fix eslint error with "modern.config.ts"
+
+## 1.3.3
+
+### Patch Changes
+
+- 2ba581e4: fix: mwa and module sub project dependence error
+
 ## 1.3.2
 
 ### Patch Changes

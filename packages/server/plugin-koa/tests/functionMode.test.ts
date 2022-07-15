@@ -21,6 +21,7 @@ describe('function-mode', () => {
     apiHandler = await runner.prepareApiServer({
       pwd,
       mode: 'function',
+      prefix: '/',
     });
   });
 
@@ -49,5 +50,21 @@ describe('function-mode', () => {
       name: 'xxx',
     });
     expect(res3.status).toBe(500);
+  });
+
+  test('should support upload file', done => {
+    request(apiHandler)
+      .post('/upload')
+      .field('my_field', 'value')
+      .attach('file', path.join(__dirname, './fixtures/assets/index.html'))
+      .end(async (err, res) => {
+        if (err) {
+          throw err;
+        }
+        expect(res.statusCode).toBe(200);
+        expect(res.body.message).toBe('success');
+        expect(res.body.formData).not.toBeUndefined();
+        done();
+      });
   });
 });

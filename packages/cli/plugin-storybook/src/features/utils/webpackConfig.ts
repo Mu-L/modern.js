@@ -1,7 +1,6 @@
-/* eslint-disable max-statements */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import path from 'path';
-import { fs, Import } from '@modern-js/utils';
+import { fs, Import, CHAIN_ID } from '@modern-js/utils';
 import type { IAppContext, NormalizedConfig } from '@modern-js/core';
 import type {
   Configuration,
@@ -10,97 +9,21 @@ import type {
   RuleSetConditionAbsolute,
 } from 'webpack';
 import type Chain from 'webpack-chain';
+import {
+  ClientWebpackConfig,
+  JS_REGEX,
+  TS_REGEX,
+  mergeRegex,
+} from '@modern-js/webpack';
 import { CURRENT_PKG_PATH } from '../constants';
 
-const WebpackConfig: typeof import('@modern-js/webpack') = Import.lazy(
-  '@modern-js/webpack',
-  require,
-);
 const NodePolyfillPlugin: typeof import('node-polyfill-webpack-plugin') =
   Import.lazy('node-polyfill-webpack-plugin', require);
 
-class ClientNoEntryWebpackConfig extends WebpackConfig.ClientWebpackConfig {
+class ClientNoEntryWebpackConfig extends ClientWebpackConfig {
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   entry() {}
 }
-
-// 处理基础webpack配置
-const getConfig = ({
-  appContext,
-  sbWebpackConfig,
-  isTsProject,
-  configDir,
-  env,
-  chain,
-}: {
-  appContext: IAppContext;
-  modernConfig: NormalizedConfig;
-  sbWebpackConfig: Configuration;
-  isTsProject: boolean;
-  configDir: string;
-  env: 'prod' | 'dev';
-  chain: Chain;
-}) => {
-  const { appDirectory } = appContext;
-  const definePluginConfig: any = sbWebpackConfig.plugins?.filter(
-    p => p.constructor.name === 'DefinePlugin',
-  )[0];
-  if (definePluginConfig) {
-    chain.plugin('define').tap(definitions => {
-      if (definePluginConfig.definitions['process.env']) {
-        const envsKey = Object.keys(
-          definePluginConfig.definitions['process.env'],
-        );
-        const copyEnvs = definePluginConfig.definitions['process.env'];
-        envsKey.forEach(envKey => {
-          definitions[0][`process.env.${envKey}`] = copyEnvs[envKey];
-        });
-        definitions[0]['process.env.NODE_ENV'] = JSON.stringify(
-          env === 'dev' ? 'development' : 'production',
-        );
-      }
-
-      return definitions;
-    });
-  }
-  chain.plugin('polyfill').use(NodePolyfillPlugin);
-  chain.module.rule('loaders').oneOfs.delete('fallback'); // 移除 fallback 规则
-  chain.module.rule('loaders').oneOf('js').include.add(appDirectory); // 将内置webpack配置中对于 js(x)|ts(x) 的 rule 的include中添加项目的路径
-  chain.plugins
-    .delete('progress')
-    .delete('case-sensitive')
-    // main入口文件的 html-plugin
-    .delete('html-main');
-  chain.resolve.merge({ fallback: { perf_hooks: false } });
-
-  // jsRuleConfig: 单独拿出 js(x)|ts(x) rule,准备替换上面移除过的 storybook  js(x)|ts(x) rule
-  const jsRuleConfig = (
-    chain.module.rule('loaders').oneOf('js') as any
-  ).toConfig() as RuleSetRule;
-
-  // config dir 针对内部的 storybook 配置目录下的文件做编译处理，复用js rules
-  const configDirRuleChain = chain.module.rule('loaders').oneOf('config-dir');
-  configDirRuleChain
-    .test(isTsProject ? /\.(js|mjs|jsx|ts|tsx)$/ : /\.(js|mjs|jsx)$/)
-    .include.add(configDir)
-    .end()
-    .enforce('pre')
-    .use('a')
-    .merge({
-      ...((jsRuleConfig.use as RuleSetUseItem[])[0] as Record<string, any>),
-    });
-  chain.module.rule('js').merge(jsRuleConfig);
-
-  (sbWebpackConfig.resolve!.alias as any)['@styles'] = path.join(
-    appDirectory,
-    './styles',
-  );
-  chain.merge({ resolve: sbWebpackConfig.resolve });
-  return {
-    config: chain.toConfig(),
-    jsRule: jsRuleConfig,
-  };
-};
 
 // 改变storybook webpack config，有副作用
 const resolveStorybookWebPackConfig = (
@@ -108,6 +31,20 @@ const resolveStorybookWebPackConfig = (
   clientWebpackConfig: Configuration,
   { appDirectory }: { appDirectory: string },
 ) => {
+  sbWebpackConfig.output = clientWebpackConfig.output;
+  if (typeof clientWebpackConfig.output === 'object') {
+    sbWebpackConfig.output = {
+      ...clientWebpackConfig.output,
+      publicPath:
+        clientWebpackConfig.output?.publicPath === '/'
+          ? '' // Keep it consistent with the storybook
+          : clientWebpackConfig.output?.publicPath,
+    };
+  } else {
+    sbWebpackConfig.output = {
+      publicPath: '',
+    };
+  }
   if (sbWebpackConfig.module) {
     const blackRuleList = [
       /\.css$/.toString(),
@@ -135,8 +72,8 @@ const resolveStorybookWebPackConfig = (
       rule =>
         rule.test &&
         rule.test instanceof RegExp &&
-        (rule.test.toString() === /\.(js|mjs|jsx)$|\.tsx?$/.toString() ||
-          rule.test.toString() === /\.(js|mjs|jsx)$/.toString()),
+        (rule.test.toString() === mergeRegex(JS_REGEX, TS_REGEX).toString() ||
+          rule.test.toString() === JS_REGEX.toString()),
     );
 
     if (!clientJsAndTsRule || !jsAndTsRule) {
@@ -176,9 +113,10 @@ const resolveStorybookWebPackConfig = (
         return true;
       },
     );
-    sbWebpackConfig.module.rules.push(
-      (clientWebpackConfig as any).module.rules[1],
-    );
+    const clientOneOfRule = (clientWebpackConfig as any).module.rules.filter(
+      (rule: any) => Boolean(rule.oneOf),
+    )[0];
+    sbWebpackConfig.module.rules.push(clientOneOfRule);
   }
   // 处理 resolve
   // 将已经合并的 storybook 和 Client 的resolve 配置到 Storybook resolve上
@@ -217,7 +155,6 @@ export const getCustomWebpackConfigHandle: any = ({
   modernConfig,
   configDir,
   isTsProject = false,
-  env,
 }: {
   appContext: IAppContext;
   modernConfig: NormalizedConfig;
@@ -225,18 +162,29 @@ export const getCustomWebpackConfigHandle: any = ({
   isTsProject: boolean;
   env: 'dev' | 'prod';
 }) => {
+  const { RULE, PLUGIN, ONE_OF } = CHAIN_ID;
   const { appDirectory } = appContext;
+
+  // Manual configuration `output.path = 'storybook-static'`;
+  modernConfig.output.path = './dist/storybook-static';
+
   const webpackConfig = new ClientNoEntryWebpackConfig(
     appContext,
     modernConfig,
   );
   const chain: Chain = webpackConfig.getChain();
   chain.plugin('polyfill').use(NodePolyfillPlugin);
-  chain.module.rule('loaders').oneOfs.delete('fallback'); // 移除 fallback 规则
+
+  // 移除 fallback 规则
+  chain.module.rule(RULE.LOADERS).oneOfs.delete(ONE_OF.FALLBACK);
+
   chain.plugins
-    .delete('progress')
-    .delete('case-sensitive') // main入口文件的 html-plugin
-    .delete('html-main');
+    .delete(PLUGIN.PROGRESS)
+    // main 入口文件的 html-plugin
+    .delete(`${PLUGIN.HTML}-main`)
+    // remove `ForkTsCheckerWebpackPlugin`, because storybook is supported
+    .delete(PLUGIN.TS_CHECKER);
+
   chain.resolve.merge({
     fallback: {
       perf_hooks: false,
@@ -244,9 +192,14 @@ export const getCustomWebpackConfigHandle: any = ({
   });
 
   const jsRuleConfig = (
-    chain.module.rule('loaders').oneOf('js') as any
-  ).toConfig() as RuleSetRule; // config dir 针对内部的 storybook 配置目录下的文件做编译处理，复用js rules
-  const configDirRuleChain = chain.module.rule('loaders').oneOf('config-dir');
+    chain.module.rule(RULE.LOADERS).oneOf(ONE_OF.JS) as any
+  ).toConfig() as RuleSetRule;
+
+  // config dir 针对内部的 storybook 配置目录下的文件做编译处理，复用 js rules
+  const configDirRuleChain = chain.module
+    .rule(RULE.LOADERS)
+    .oneOf('config-dir');
+
   configDirRuleChain
     .test(isTsProject ? /\.(js|mjs|jsx|ts|tsx)$/ : /\.(js|mjs|jsx)$/)
     .include.add(configDir)
@@ -268,4 +221,3 @@ export const getCustomWebpackConfigHandle: any = ({
   };
 };
 /* eslint-enable @typescript-eslint/no-unused-vars */
-/* eslint-enable max-statements */

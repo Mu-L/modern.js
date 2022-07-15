@@ -25,6 +25,7 @@ describe('run dependence-generator', () => {
       { name: 'dependence' },
       'utf-8',
     );
+    fs.writeJSONSync(path.join(projectDir, 'tsconfig.json'), {}, 'utf-8');
   });
   afterEach(() => {
     const projectDir = path.join(os.tmpdir(), 'modern-js-test', 'dependence');
@@ -51,7 +52,7 @@ describe('run dependence-generator', () => {
       dependencies: { '@modern-js/runtime': '^1' },
       peerDependencies: { '@modern-js/core': '^1' },
       appendTypeContent:
-        "/// <reference types='@modern-js/plugin-testing/type' />",
+        "/// <reference types='@modern-js/plugin-testing/types' />",
     };
     await handleTemplateFile(mockGeneratorCore._context, mockGeneratorCore);
     expect(fs.existsSync(path.join(projectDir, 'package.json'))).toBe(true);
@@ -64,7 +65,7 @@ describe('run dependence-generator', () => {
       'utf-8',
     );
     expect(typeContent).toContain(
-      "/// <reference types='@modern-js/plugin-testing/type' />",
+      "/// <reference types='@modern-js/plugin-testing/types' />",
     );
   });
   it('config has project path', async () => {
@@ -74,12 +75,17 @@ describe('run dependence-generator', () => {
       { name: 'dependence' },
       'utf-8',
     );
+    fs.writeJSONSync(
+      path.join(projectDir, 'apps', 'mwa', 'tsconfig.json'),
+      {},
+      'utf-8',
+    );
     mockGeneratorCore._context.config = {
       devDependencies: { '@modern-js/plugin-less': '^1' },
       dependencies: { '@modern-js/runtime': '^1' },
       peerDependencies: { '@modern-js/core': '^1' },
       appendTypeContent:
-        "/// <reference types='@modern-js/plugin-testing/type' />",
+        "/// <reference types='@modern-js/plugin-testing/types' />",
       projectPath: 'apps/mwa',
     };
     await handleTemplateFile(mockGeneratorCore._context, mockGeneratorCore);
@@ -98,7 +104,7 @@ describe('run dependence-generator', () => {
       'utf-8',
     );
     expect(typeContent).toContain(
-      "/// <reference types='@modern-js/plugin-testing/type' />",
+      "/// <reference types='@modern-js/plugin-testing/types' />",
     );
   });
 });

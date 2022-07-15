@@ -1,18 +1,22 @@
 import fs from 'fs';
 import path from 'path';
-import { chalk } from '@modern-js/utils';
+import { chalk, signale as logger } from '@modern-js/utils';
 import { Alias } from '@rollup/plugin-alias';
 import { Plugin as RollupPlugin, SourceMap } from 'rollup';
 import postcss, { AcceptedPlugin, ProcessOptions } from 'postcss';
 import { codeFrameColumns } from '@babel/code-frame';
-import logger from 'signale';
 import type { LegacyImporterResult } from 'sass';
 import less from 'less';
-import { IAppContext, NormalizedConfig } from '@modern-js/core';
+import type {
+  IAppContext,
+  LessLoaderOptions,
+  NormalizedConfig,
+  SassLoaderOptions,
+} from '@modern-js/core';
 import {
-  getLessConfig,
+  getLessLoaderOptions,
   getPostcssConfig,
-  getSassConfig,
+  getSassLoaderOptions,
 } from '@modern-js/css-config';
 import { isCSSRequest, replaceAsync, addQuery, hasDependency } from '../utils';
 import {
@@ -24,12 +28,6 @@ import { HMRError } from '../websocket-server';
 import { createAssetModule, fileToModules } from '../AssetModule';
 import { normalizeAlias } from './alias';
 
-export interface PreProcessOptions {
-  lessOptions?: Record<string, any>;
-  sassOptions?: Record<string, any>;
-  additionalData: string | ((content: string, filename: string) => string);
-}
-
 export interface TransformRes {
   css?: string;
   errors?: HMRError[];
@@ -38,8 +36,8 @@ export interface TransformRes {
 }
 
 let processorOptions: {
-  less: PreProcessOptions;
-  sass: PreProcessOptions;
+  less: LessLoaderOptions;
+  sass: SassLoaderOptions;
 };
 
 let nodeModulesPaths: Array<string> = [];
@@ -60,8 +58,8 @@ const initProcessorOptions = (config: NormalizedConfig) => {
     return;
   }
 
-  const lessOptions = getLessConfig(config);
-  const sassOptions = getSassConfig(config);
+  const { options: lessOptions } = getLessLoaderOptions(config);
+  const { options: sassOptions } = getSassLoaderOptions(config);
 
   processorOptions = {
     less: lessOptions,
@@ -72,7 +70,7 @@ const initProcessorOptions = (config: NormalizedConfig) => {
 const initTailwindConfig = (config: NormalizedConfig) => {
   try {
     if (!tailwindConfig) {
-      // TODO: talwindcss config.
+      // TODO: tailwindcss config.
       tailwindConfig = (config.tools as any).tailwind;
     }
   } catch (err: any) {
@@ -207,13 +205,13 @@ export class CustomLessFileManager extends less.FileManager {
 const compileLess = async (
   code: string,
   filename: string,
-  options: PreProcessOptions,
+  options: LessLoaderOptions,
 ): Promise<TransformRes> => {
   const less = require('less');
 
   try {
     const res = await less.render(
-      getSource(code, filename, options.additionalData),
+      getSource(code, filename, options.additionalData as string),
       {
         filename,
         sourceMap: true,
@@ -252,7 +250,7 @@ const compileLess = async (
 const compileSass = async (
   code: string,
   filename: string,
-  options: PreProcessOptions,
+  options: SassLoaderOptions,
 ): Promise<TransformRes> => {
   const sass = require('sass');
 
@@ -349,6 +347,7 @@ const transformCSS = async (
   }
 
   if (errors?.length) {
+    // eslint-disable-next-line no-throw-literal
     throw errors[0] as Error;
   }
 
@@ -364,7 +363,7 @@ const transformCSS = async (
       require('postcss-modules')({
         localsConvention: 'camelCase',
         generateScopedName: config.output.cssModuleLocalIdentName,
-        globalModulePaths: [/\.global\.(css|scss|sass|less|stylus|styl)$/],
+        globalModulePaths: [/\.global\.(css|scss|sass|less)$/],
         getJSON(_: string, _modules: Record<string, string>) {
           moduleLocalsMap.set(filename, _modules);
         },
@@ -372,7 +371,7 @@ const transformCSS = async (
     );
   }
 
-  // As @modern-js/plugin-tailwindcss requires 'tailwindcss' as peer depenedency,
+  // As @modern-js/plugin-tailwindcss requires 'tailwindcss' as peer dependency,
   // so we could safely require both plugins when using tailwind features
   if (hasTailwind(appDirectory)) {
     postcssPlugins.push(require('tailwindcss')(tailwindConfig));
@@ -476,7 +475,7 @@ export const cssPlugin = (
 
     const { appDirectory } = appContext;
 
-    // find parent node_modules paths for sass and stylus
+    // find parent node_modules paths for sass and less
     nodeModulesPaths = require('find-node-modules')({ cwd: appDirectory });
 
     initProcessorOptions(config);
@@ -490,7 +489,7 @@ export const cssPlugin = (
     const { css, map } = await transformCSS(code, importer, config, appContext);
 
     // css url() rewrite
-    const rewrited = await rewriteCssUrl(
+    const rewritted = await rewriteCssUrl(
       css,
       async (resource: string): Promise<string> => {
         resource = resource.replace(/(^['"])|(['"]$)/g, '').replace(/^~/, '');
@@ -535,7 +534,7 @@ export const cssPlugin = (
 
     const wrappedCss = [
       `import { updateStyle, removeStyle } from "${DEV_CLIENT_URL}"`,
-      `const code = ${JSON.stringify(rewrited)}`,
+      `const code = ${JSON.stringify(rewritted)}`,
       `const filename = ${JSON.stringify(importer)}`,
       `updateStyle(filename, code);`,
       moduleLocalsMap.has(importer) &&

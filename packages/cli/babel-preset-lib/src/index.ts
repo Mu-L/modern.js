@@ -1,7 +1,11 @@
-import { getBaseBabelChain } from '@modern-js/babel-preset-base';
-import { createBabelChain } from '@modern-js/babel-chain';
+import {
+  getBaseBabelChain,
+  createBabelChain,
+} from '@modern-js/babel-preset-base';
 import { getPlugins } from './plugins';
 import { ISyntaxOption, ILibPresetOption } from './types';
+
+export * from '@modern-js/babel-preset-base';
 
 export const getBabelConfig = (
   libPresetOption: ILibPresetOption,
@@ -18,6 +22,7 @@ export const getBabelChain = (
     enableReactPreset,
     enableTypescriptPreset,
     lodashOptions,
+    styledComponentsOptions,
   } = libPresetOption;
   const { syntax, type } = syntaxOption;
   const chain = createBabelChain();
@@ -35,9 +40,11 @@ export const getBabelChain = (
     plugins: {
       transformRuntime: {
         corejs: false, // 关闭 corejs
-        // helpers: true,
+        // for es5 code need helper functions
+        helpers: syntaxOption.syntax === 'es5',
       },
       lodashOptions,
+      styledComponentsOptions,
     },
     jsxTransformRuntime,
   });
@@ -47,4 +54,4 @@ export const getBabelChain = (
 };
 
 export * from './types';
-export * from './babel-utils';
+export { applyUserBabelConfig } from '@modern-js/babel-preset-base';

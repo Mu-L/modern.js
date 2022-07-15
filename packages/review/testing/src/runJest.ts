@@ -9,17 +9,17 @@
 import { Config } from '@jest/types';
 import yargs from 'yargs/yargs';
 import { runCLI } from 'jest';
-import chalk from 'chalk';
+import { chalk } from '@modern-js/utils';
+import type { PluginAPI } from '@modern-js/core';
 import { getJestUtils, patchConfig } from './config';
 import { TestConfig } from './types';
 import { debug } from './utils';
-import { createLifeCycle } from './plugin';
 
-type Agrv = Omit<Config.Argv, '_' | '$0'>;
+type Argv = Omit<Config.Argv, '_' | '$0'>;
 
 const buildArgv = async (
   rawArgv: string[],
-  config: Agrv,
+  config: Argv,
 ): Promise<Config.Argv> => {
   const argv = await yargs(rawArgv).argv;
 
@@ -85,10 +85,10 @@ const readResultsAndExit = (
 };
 
 /**
- * Node API: excute jest
+ * Node API: execute jest
  */
 export async function runJest(
-  config: Agrv,
+  config: Argv,
   pwd: string = process.cwd(),
 ): Promise<void> {
   try {
@@ -107,22 +107,30 @@ export async function runJest(
 /**
  * Node API: run test
  */
-export async function runTest(config: TestConfig, pwd: string = process.cwd()) {
+export async function runTest(
+  api: PluginAPI,
+  config: TestConfig,
+  pwd: string = process.cwd(),
+) {
   process.env.NODE_ENV = 'test';
-
-  const lifeCycle = createLifeCycle(config.plugins);
 
   const jestUtils = getJestUtils(config);
 
   await patchConfig(jestUtils);
 
-  await lifeCycle.jestConfig(jestUtils, {
-    onLast: input => input as any,
+  // 确保用户设置的配置可以被插件处理，比如设置在 projects 中
+  jestUtils.setJestUserConfig();
+
+  const hookRunners = api.useHookRunners();
+  const testConfigOperator = await hookRunners.jestConfig(jestUtils, {
+    onLast: input => input,
   });
 
-  const finalConfig = jestUtils.jestConfig;
+  const finalConfig = testConfigOperator.getFinalConfig();
 
   debug('Jest config:', finalConfig);
 
   await runJest(finalConfig, pwd);
+
+  await hookRunners.afterTest();
 }

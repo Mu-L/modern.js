@@ -11,7 +11,7 @@
     "modern",
     "modern.js"
   ],
-  "version": "1.2.1",
+  "version": "1.3.17",
   "jsnext:source": "./src/index.ts",
   "types": "./src/index.ts",
   "main": "./dist/js/node/index.js",
@@ -38,18 +38,19 @@
   },
   "scripts": {
     "prepare": "pnpm build",
-    "prepublishOnly": "pnpm build --platform",
+    "prepublishOnly": "only-allow-pnpm && pnpm build --platform",
     "new": "modern new",
-    "build": "modern build",
-    "test": "jest --passWithNoTests"
+    "build": "wireit",
+    "test": "wireit",
+    "dev": "modern build --watch"
   },
   "dependencies": {
-    "@babel/runtime": "^7",
-    "@modern-js/esbuild-compiler": "workspace:^0.2.1",
-    "@modern-js/plugin-router": "workspace:^1.2.1",
-    "@modern-js/plugin-state": "workspace:^1.2.1",
-    "@modern-js/utils": "workspace:^1.2.2",
-    "@modern-js/webpack": "workspace:^1.2.1",
+    "@babel/runtime": "^7.18.0",
+    "@modern-js/plugin-analyze": "workspace:^1.5.0",
+    "@modern-js/plugin-router": "workspace:^1.2.16",
+    "@modern-js/plugin-state": "workspace:^1.2.10",
+    "@modern-js/utils": "workspace:^1.7.12",
+    "@modern-js/webpack": "workspace:^1.12.1",
     "@storybook/addon-actions": "^6.3.8",
     "@storybook/addon-essentials": "^6.3.8",
     "@storybook/addon-links": "^6.3.8",
@@ -58,42 +59,37 @@
     "@storybook/core": "^6.3.8",
     "@storybook/manager-webpack5": "^6.3.8",
     "@storybook/react": "^6.3.8",
+    "esbuild": "^0.14.38",
     "findup-sync": "^4.0.0",
     "fs-extra": "^10.0.0",
-    "glob": "^7.1.7",
-    "import-lazy": "^4.0.0",
-    "lodash.merge": "^4.6.2",
-    "lodash.template": "^4.5.0",
     "node-polyfill-webpack-plugin": "^1.1.4",
     "process.argv": "^0.6.0"
   },
   "devDependencies": {
-    "@modern-js/core": "workspace:^1.3.2",
+    "@babel/core": "^7.18.0",
+    "@modern-js/core": "workspace:*",
+    "@modern-js/runtime": "workspace:*",
+    "@modern-js/runtime-core": "workspace:*",
     "@scripts/build": "workspace:*",
-    "@modern-js/module-tools-hooks": "workspace:^1.2.1",
-    "@modern-js/runtime": "workspace:^1.2.1",
-    "@modern-js/runtime-core": "workspace:^1.2.1",
+    "@scripts/jest-config": "workspace:*",
     "@storybook/addons": "^6.3.7",
     "@types/findup-sync": "^4.0.1",
     "@types/fs-extra": "^9.0.12",
     "@types/glob": "^7.1.4",
-    "@types/jest": "^26",
-    "@types/lodash.merge": "^4.6.6",
-    "@types/lodash.template": "^4.5.0",
+    "@types/jest": "^27",
     "@types/node": "^14",
     "@types/react": "^17",
     "@types/react-dom": "^17",
-    "commander": "^8.1.0",
-    "typescript": "^4",
-    "webpack": "^5.54.0",
-    "webpack-chain": "^6.5.1",
     "jest": "^27",
-    "@scripts/jest-config": "workspace:*"
+    "react": "^17",
+    "react-dom": "^17",
+    "typescript": "^4",
+    "webpack": "^5.71.0",
+    "webpack-chain": "^6.5.1"
   },
   "peerDependencies": {
-    "@modern-js/core": "workspace:^1.3.2",
-    "@modern-js/runtime": "workspace:^1.2.1",
-    "@modern-js/runtime-core": "workspace:^1.2.1"
+    "@modern-js/runtime": "workspace:^1.3.5",
+    "react": "^17"
   },
   "sideEffects": false,
   "modernConfig": {},
@@ -101,5 +97,28 @@
     "registry": "https://registry.npmjs.org/",
     "access": "public",
     "types": "./dist/types/index.d.ts"
+  },
+  "wireit": {
+    "build": {
+      "command": "modern build",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "output": [
+        "dist/**/*"
+      ]
+    },
+    "test": {
+      "command": "jest --passWithNoTests",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json",
+        "tests/**/*"
+      ],
+      "output": []
+    }
   }
 }

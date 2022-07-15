@@ -1,5 +1,93 @@
 # @modern-js/generator-utils
 
+## 1.3.0
+
+### Minor Changes
+
+- 33cebd2: chore(generator-utils): tidy up `@modern-js/generator-utils` func
+
+  chore(generastor-utils): 整理 `@modern-js/generator-utils` 导出方法
+
+### Patch Changes
+
+- Updated dependencies [33cebd2]
+  - @modern-js/plugin-i18n@1.3.0
+  - @modern-js/utils@1.7.12
+
+## 1.2.7
+
+### Patch Changes
+
+- 341bb42: feat: bump codesmith package version
+- Updated dependencies [a90bc96]
+  - @modern-js/utils@1.7.9
+
+## 1.2.6
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+- c7e38b4e6: feat: upgrade codesmith pkg version
+- Updated dependencies [a1198d509]
+  - @modern-js/plugin-i18n@1.2.7
+
+## 1.2.5
+
+### Patch Changes
+
+- d32f35134: chore: add modern/jest/eslint/ts config files to .npmignore
+- Updated dependencies [d32f35134]
+- Updated dependencies [6ae4a34ae]
+- Updated dependencies [b80229c79]
+- Updated dependencies [948cc4436]
+  - @modern-js/plugin-i18n@1.2.6
+  - @modern-js/utils@1.7.3
+
+## 1.2.4
+
+### Patch Changes
+
+- 6b0bb5e3b: feat: bump codesmith version
+- 69a728375: fix: remove exports.jsnext:source after publish
+- Updated dependencies [cd7346b0d]
+- Updated dependencies [69a728375]
+  - @modern-js/utils@1.7.2
+  - @modern-js/plugin-i18n@1.2.5
+
+## 1.2.3
+
+### Patch Changes
+
+- 592edabc: feat: prebundle url-join,mime-types,json5,fast-glob,globby,ora,inquirer
+- Updated dependencies [2d155c4c]
+- Updated dependencies [123e432d]
+- Updated dependencies [e5a9b26d]
+- Updated dependencies [0b26b93b]
+- Updated dependencies [123e432d]
+- Updated dependencies [f9f66ef9]
+- Updated dependencies [592edabc]
+- Updated dependencies [895fa0ff]
+- Updated dependencies [3578913e]
+- Updated dependencies [1c3beab3]
+  - @modern-js/utils@1.6.0
+
+## 1.2.2
+
+### Patch Changes
+
+- 6cffe99d: chore:
+  remove react eslint rules for `modern-js` rule set.
+  add .eslintrc for each package to speed up linting
+- 04ae5262: chore: bump @modern-js/utils to v1.4.1 in dependencies
+- 60f7d8bf: feat: add tests dir to npmignore
+- Updated dependencies [b8599d09]
+- Updated dependencies [6cffe99d]
+- Updated dependencies [04ae5262]
+- Updated dependencies [60f7d8bf]
+- Updated dependencies [3bf4f8b0]
+  - @modern-js/utils@1.5.0
+  - @modern-js/plugin-i18n@1.2.4
+
 ## 1.2.1
 
 ### Patch Changes

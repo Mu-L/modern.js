@@ -1,17 +1,17 @@
-import path from 'path';
+import ScanImportsModule from 'path';
 import {
   isModernjsMonorepo,
   getMonorepoPackages,
   findMonorepoRoot,
   fs,
+  fastGlob,
   createDebugger,
   isTypescript,
   applyOptionsChain,
 } from '@modern-js/utils';
 import { parse, init } from 'es-module-lexer';
-import glob from 'fast-glob';
-import { loadConfig } from 'tsconfig-paths';
-import { IAppContext, NormalizedConfig } from '@modern-js/core';
+import { loadConfig } from '@modern-js/utils/tsconfig-paths';
+import type { IAppContext, NormalizedConfig } from '@modern-js/core';
 import { LexerParseResult } from '../plugins/import-rewrite';
 import { BARE_SPECIFIER_REGEX, BABEL_MACRO_EXTENSIONS } from '../constants';
 import { normalizePackageName } from '../utils';
@@ -41,7 +41,7 @@ const shouldScanSpecifierPackage = (
 
   if (
     modernjsMonorepo &&
-    packageDir.startsWith(path.resolve(rootDir, './features'))
+    packageDir.startsWith(ScanImportsModule.resolve(rootDir, './features'))
   ) {
     return true;
   }
@@ -140,7 +140,7 @@ const scanFiles = async (
 
   seen.set(dir, true);
 
-  const files = await glob(
+  const files = await fastGlob(
     ['.js', '.ts', '.jsx', '.tsx'].map(ext => `./src/**/*${ext}`),
     {
       cwd: dir,
@@ -172,7 +172,7 @@ const scanFiles = async (
       {
         // fix: can't use tsx loader for ts file
         // https://esbuild.github.io/content-types/#ts-vs-tsx
-        loader: path.extname(file).slice(1),
+        loader: ScanImportsModule.extname(file).slice(1),
         sourcemap: false,
         sourcefile: file,
       },
@@ -198,7 +198,7 @@ const scanFiles = async (
             !alias.startsWith('@modern-js/runtime') &&
             alias.startsWith(specifier.split('/')[0]),
         ) &&
-        !/\.(css|less|scss|styl)$/.test(specifier)
+        !/\.(css|less|scss)$/.test(specifier)
       ) {
         if (monorepoRootDir) {
           const found = monorepoPackages.find(({ name }) =>
@@ -247,12 +247,12 @@ const scanFiles = async (
 
 const removeDuplicate = (deps: DepSpecifier[]): DepSpecifier[] => {
   const map = new Map<string, boolean>();
-  const finnal = [];
+  const final = [];
   for (const dep of deps) {
     if (!map.has(dep.specifier)) {
-      finnal.push(dep);
+      final.push(dep);
       map.set(dep.specifier, true);
     }
   }
-  return finnal;
+  return final;
 };

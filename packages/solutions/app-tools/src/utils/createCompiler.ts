@@ -1,5 +1,5 @@
-import webpack, { Configuration, StatsCompilation } from 'webpack';
-import { IAppContext, NormalizedConfig, mountHook } from '@modern-js/core';
+import { webpack, Configuration } from '@modern-js/webpack';
+import type { IAppContext, NormalizedConfig, PluginAPI } from '@modern-js/core';
 import {
   chalk,
   logger,
@@ -8,24 +8,24 @@ import {
 } from '@modern-js/utils';
 import { printInstructions } from './printInstructions';
 
-const prettyTime = (stats: StatsCompilation) =>
-  Math.max(...(stats.children?.map(child => child.time || 0) || []));
-
 export const createCompiler = async ({
+  api,
   webpackConfigs,
   // TODO: params
   userConfig,
   appContext,
 }: {
+  api: PluginAPI;
   webpackConfigs: Configuration[];
   userConfig: NormalizedConfig;
   appContext: IAppContext;
 }) => {
   try {
-    await (mountHook() as any).beforeCreateCompiler({ webpackConfigs });
+    const hookRunners = api.useHookRunners();
+    await hookRunners.beforeCreateCompiler({ webpackConfigs });
     const compiler = webpack(webpackConfigs);
 
-    await (mountHook() as any).afterCreateCompiler({ compiler });
+    await hookRunners.afterCreateCompiler({ compiler });
 
     let isFirstCompile = true;
 
@@ -35,8 +35,6 @@ export const createCompiler = async ({
     });
 
     compiler.hooks.done.tap('done', async (stats: any) => {
-      clearConsole();
-
       const statsData = stats.toJson({
         all: false,
         warnings: true,
@@ -51,21 +49,14 @@ export const createCompiler = async ({
         logger.log(errors.join('\n\n'));
         logger.log();
       } else if (process.stdout.isTTY || isFirstCompile) {
-        await (mountHook() as any).afterDev();
+        await hookRunners.afterDev();
         if (warnings.length) {
           logger.log(chalk.yellow(`Compiled with warnings.\n`));
           logger.log(warnings.join('\n\n'));
           logger.log();
-        } else {
-          logger.log(
-            chalk.green(
-              `Compiled successfully in ${prettyTime(statsData)} ms.\n`,
-            ),
-          );
         }
-        await printInstructions(appContext, userConfig);
+        await printInstructions(hookRunners, appContext, userConfig);
       }
-      // eslint-disable-next-line require-atomic-updates
       isFirstCompile = false;
     });
 

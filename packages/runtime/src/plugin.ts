@@ -1,10 +1,12 @@
 import type React from 'react';
 import {
+  Setup,
+  ToThreads,
+  CommonAPI,
+  PluginOptions,
   createManager,
   createPipeline,
   createAsyncPipeline,
-  createContext,
-  PluginFromManager,
 } from '@modern-js/plugin';
 import type { RuntimeContext, TRuntimeContext } from './runtime-context';
 import { createLoaderManager } from './loader/loaderManager';
@@ -28,36 +30,12 @@ const provide = createPipeline<
   JSX.Element
 >();
 
-export const AppComponentContext =
-  createContext<React.ComponentType<any> | null>(null);
-
-export const useAppComponent = () => {
-  const AppComponent = AppComponentContext.use().value;
-
-  if (!AppComponent) {
-    throw new Error(`Expect React.ComponentType, accept: null`);
-  }
-
-  return AppComponent;
-};
-
-export const useRootElement = () => {
-  const rootElement = AppComponentContext.use().value;
-
-  if (!rootElement) {
-    throw new Error(`Expect HTMLElement, accept: null`);
-  }
-
-  return rootElement;
-};
-
 const client = createAsyncPipeline<
   {
     App: React.ComponentType<any>;
     readonly context?: RuntimeContext;
     rootElement: HTMLElement;
   },
-  // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
   void
 >();
 
@@ -81,15 +59,28 @@ const pickContext = createPipeline<
   TRuntimeContext
 >();
 
-export const createRuntime = () =>
-  createManager({
-    hoc,
-    provide,
-    client,
-    server,
-    init,
-    pickContext,
-  });
+const runtimeHooks = {
+  hoc,
+  provide,
+  client,
+  server,
+  init,
+  pickContext,
+};
+
+/** All hooks of runtime plugin. */
+export type RuntimeHooks = typeof runtimeHooks;
+
+/** All hook callbacks of runtime plugin. */
+export type RuntimeHookCallbacks = ToThreads<RuntimeHooks>;
+
+/** All apis for runtime plugin. */
+export type PluginAPI = CommonAPI<RuntimeHooks>;
+
+/** Plugin options of a runtime plugin. */
+export type Plugin = PluginOptions<RuntimeHooks, Setup<RuntimeHooks>>;
+
+export const createRuntime = () => createManager(runtimeHooks);
 
 /**
  * register init hook. It would be revoked both ssr and csr.
@@ -130,8 +121,6 @@ const registerPrefetch = (
 };
 
 export const runtime = createRuntime();
-
-export type Plugin = PluginFromManager<typeof runtime>;
 
 export const { createPlugin } = runtime;
 

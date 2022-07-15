@@ -1,6 +1,7 @@
 import { mergeConfig } from '../src/config/mergeConfig';
+import { assignPkgConfig, WebpackConfig } from '../src';
 
-describe('load plugins', () => {
+describe('merge config', () => {
   test('should replace property deeply', () => {
     expect(
       mergeConfig([
@@ -19,7 +20,7 @@ describe('load plugins', () => {
     });
   });
 
-  test(`should set value when property value is undefined `, () => {
+  test(`should set value when property value is not undefined `, () => {
     expect(
       mergeConfig([
         { source: { entries: { app: './App.tsx' } } },
@@ -35,6 +36,22 @@ describe('load plugins', () => {
       },
       server: { baseUrl: './a' },
     });
+  });
+
+  test(`should ignore undefined property`, () => {
+    const config = mergeConfig([
+      { source: { entries: { app: './App.tsx' } } },
+      { source: { entries: undefined } },
+      { tools: { webpack: () => ({}) } },
+      { tools: { webpack: undefined } },
+    ]);
+    expect(config.source).toEqual({
+      entries: {
+        app: './App.tsx',
+      },
+    });
+    expect(Array.isArray(config.tools.webpack)).toBe(true);
+    expect((config.tools.webpack as WebpackConfig[]).length).toBe(1);
   });
 
   test(`should merge array value`, () => {
@@ -67,12 +84,53 @@ describe('load plugins', () => {
       { source: { alias: { a: 'b' } } },
       { source: { alias: () => ({ c: 'd' }) } },
       { tools: { webpack: () => ({}) } },
+      { tools: { webpack: { name: 'test' } } },
+      { tools: { webpack: () => ({}) } },
     ]);
     expect(Array.isArray(config.source.alias)).toBe(true);
     expect(config?.source?.alias?.length).toBe(2);
     expect(typeof (config.source.alias as Array<any>)[1]).toBe('function');
-
     expect(Array.isArray(config.tools.webpack)).toBe(true);
-    expect(config.tools.webpack?.length).toBe(1);
+    expect((config.tools.webpack as WebpackConfig[]).length).toBe(3);
+    expect(typeof (config.tools.webpack as Array<any>)[0]).toBe('function');
+    expect(typeof (config.tools.webpack as Array<any>)[2]).toBe('function');
+  });
+});
+
+describe('assign pkg config', () => {
+  test('should preserve symbol of plugins', () => {
+    expect(
+      assignPkgConfig(
+        {
+          plugins: [
+            {
+              [Symbol.for('test')]: 'test',
+            },
+          ],
+        },
+        {
+          runtime: {
+            router: true,
+          },
+        },
+      ),
+    ).toMatchSnapshot();
+  });
+
+  test('should merge properties deeply', () => {
+    expect(
+      assignPkgConfig(
+        {
+          runtime: {
+            state: true,
+          },
+        },
+        {
+          runtime: {
+            router: true,
+          },
+        },
+      ),
+    ).toMatchSnapshot();
   });
 });

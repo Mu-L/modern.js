@@ -1,15 +1,11 @@
-import { createBabelChain } from '@modern-js/babel-chain';
-import { IAppContext, NormalizedConfig } from '@modern-js/core';
-import {
-  applyOptionsChain,
-  isUseSSRBundle,
-  removeLeadingSlash,
-} from '@modern-js/utils';
+import type { IAppContext, NormalizedConfig } from '@modern-js/core';
+import { CHAIN_ID, removeLeadingSlash } from '@modern-js/utils';
 import { ClientWebpackConfig } from './client';
 
 class ModernWebpackConfig extends ClientWebpackConfig {
   constructor(appContext: IAppContext, options: NormalizedConfig) {
     super(appContext, options);
+
     this.htmlFilename = (name: string) =>
       removeLeadingSlash(
         `${this.options.output.htmlPath!}/${
@@ -18,11 +14,16 @@ class ModernWebpackConfig extends ClientWebpackConfig {
             : `${name}/index-es6`
         }.html`,
       );
-    this.jsChunkname = this.jsChunkname.replace(/\.js$/, '-es6.js');
+
+    this.jsChunkName = this.jsChunkName.replace(/\.js$/, '-es6.js');
 
     this.jsFilename = this.jsFilename.replace(/\.js$/, '-es6.js');
 
-    this.babelChain = createBabelChain();
+    this.babelPresetAppOptions = {
+      target: 'client',
+      useBuiltIns: false,
+      useModern: true,
+    };
   }
 
   name() {
@@ -33,7 +34,7 @@ class ModernWebpackConfig extends ClientWebpackConfig {
     super.plugins();
 
     if (this.options.cliOptions?.analyze) {
-      this.chain.plugin('bundle-analyze').tap(() => [
+      this.chain.plugin(CHAIN_ID.PLUGIN.BUNDLE_ANALYZER).tap(() => [
         {
           analyzerMode: 'static',
           openAnalyzer: false,
@@ -41,44 +42,6 @@ class ModernWebpackConfig extends ClientWebpackConfig {
         },
       ]);
     }
-  }
-
-  loaders() {
-    const loaders = super.loaders();
-
-    const babelOptions = loaders.oneOf('js').use('babel').get('options');
-
-    loaders
-      .oneOf('js')
-      .use('babel')
-      .options({
-        ...babelOptions,
-        presets: [
-          [
-            require.resolve('@modern-js/babel-preset-app'),
-            {
-              metaName: this.appContext.metaName,
-              appDirectory: this.appDirectory,
-              target: 'client',
-              useLegacyDecorators: !this.options.output?.enableLatestDecorators,
-              useBuiltIns: false,
-              useModern: true,
-              chain: this.babelChain,
-              styledCompontents: applyOptionsChain(
-                {
-                  pure: true,
-                  displayName: true,
-                  ssr: isUseSSRBundle(this.options),
-                  transpileTemplateLiterals: true,
-                },
-                (this.options.tools as any)?.styledComponents,
-              ),
-            },
-          ],
-        ],
-      });
-
-    return loaders;
   }
 }
 

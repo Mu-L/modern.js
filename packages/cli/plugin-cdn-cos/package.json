@@ -1,6 +1,6 @@
 {
   "name": "@modern-js/plugin-cdn-cos",
-  "version": "1.1.1",
+  "version": "1.1.10",
   "description": "The meta-framework suite designed from scratch for frontend-focused modern web development.",
   "homepage": "https://modernjs.dev",
   "bugs": "https://github.com/modern-js-dev/modern.js/issues",
@@ -32,33 +32,27 @@
     }
   },
   "scripts": {
-    "prepare": "modern build",
-    "prepublishOnly": "modern build --platform",
-    "dev": "modern dev",
-    "build": "modern build",
+    "prepare": "pnpm build",
+    "prepublishOnly": "only-allow-pnpm && modern build --platform",
+    "dev": "modern build --watch",
+    "build": "wireit",
     "new": "modern new",
-    "test": "jest --passWithNoTests"
+    "test": "wireit"
   },
   "dependencies": {
-    "@modern-js/core": "workspace:^1.3.2",
-    "@modern-js/utils": "workspace:^1.2.2",
-    "js-yaml": "^4.1.0",
+    "@modern-js/utils": "workspace:^1.7.12",
     "walk": "^2.3.15",
-    "cos-nodejs-sdk-v5": "^2.10.10",
-    "mime-types": "^2.1.34"
+    "cos-nodejs-sdk-v5": "^2.10.10"
   },
   "devDependencies": {
-    "@babel/runtime": "^7",
+    "@babel/runtime": "^7.18.0",
     "@scripts/build": "workspace:*",
-    "@modern-js/plugin-jarvis": "workspace:^1.2.1",
-    "del-cli": "^4.0.1",
+    "@modern-js/plugin-jarvis": "workspace:*",
+    "@modern-js/core": "workspace:*",
     "typescript": "^4",
-    "@types/jest": "^26.0.9",
+    "@types/jest": "^27",
     "@types/node": "^14",
-    "@types/js-yaml": "^4.0.4",
     "@types/walk": "^2.3.1",
-    "@types/inquirer": "^8.1.3",
-    "@types/mime-types": "^2.1.1",
     "jest": "^27",
     "@scripts/jest-config": "workspace:*"
   },
@@ -72,5 +66,28 @@
     "access": "public",
     "registry": "https://registry.npmjs.org/",
     "types": "./dist/types/index.d.ts"
+  },
+  "wireit": {
+    "build": {
+      "command": "modern build",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "output": [
+        "dist/**/*"
+      ]
+    },
+    "test": {
+      "command": "jest --passWithNoTests",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json",
+        "tests/**/*"
+      ],
+      "output": []
+    }
   }
 }

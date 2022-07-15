@@ -1,5 +1,5 @@
 import path from 'path';
-import { cli } from '../src';
+import { cli, mergeOptions } from '../src';
 import { resolveConfig, loadUserConfig } from '../src/config';
 import { loadEnv } from '../src/loadEnv';
 
@@ -62,13 +62,22 @@ describe('@modern-js/core test', () => {
 
   it('test cli init dev', async () => {
     cwdSpy.mockReturnValue(path.join(cwd, 'nested-folder'));
-    const options = {
-      beforeUsePlugins: jest.fn(),
-    };
-    options.beforeUsePlugins.mockImplementation((plugins, _) => plugins);
-    await cli.init(['dev'], options);
-    expect(loadEnv).toHaveBeenCalledWith(cwd);
-    expect(options.beforeUsePlugins).toHaveBeenCalledWith([], {});
+    await cli.init(['dev']);
+    expect(loadEnv).toHaveBeenCalledWith(cwd, undefined);
     // TODO: add more test cases
+  });
+});
+
+describe('test mergeOptions', () => {
+  it('serverConfigFile must exist', () => {
+    const options = mergeOptions({});
+    expect(options).toHaveProperty('serverConfigFile');
+  });
+
+  it('serverConfigFile can be overwritten', () => {
+    const options = mergeOptions({
+      serverConfigFile: 'test',
+    });
+    expect(options.serverConfigFile).toBe('test');
   });
 });

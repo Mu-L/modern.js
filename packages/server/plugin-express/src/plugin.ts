@@ -2,10 +2,10 @@ import * as path from 'path';
 import express, { RequestHandler, Express } from 'express';
 import type { Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
-import { createPlugin } from '@modern-js/server-core';
-import { requireModule } from '@modern-js/bff-utils';
-import { fs, createDebugger } from '@modern-js/utils';
+import { APIHandlerInfo } from '@modern-js/bff-core';
+import { fs, createDebugger, compatRequire } from '@modern-js/utils';
 import finalhandler from 'finalhandler';
+import type { ServerPlugin } from '@modern-js/server-core';
 import { run } from './context';
 import registerRoutes from './registerRoutes';
 
@@ -15,15 +15,13 @@ interface FrameConfig {
   middleware: (RequestHandler | string)[];
 }
 
-export type Mode = 'function' | 'framework';
-
 const findAppModule = async (apiDir: string) => {
   const exts = ['.ts', '.js'];
   const paths = exts.map(ext => path.resolve(apiDir, `app${ext}`));
 
   for (const filename of paths) {
     if (await fs.pathExists(filename)) {
-      return requireModule(filename);
+      return compatRequire(filename);
     }
   }
 
@@ -37,7 +35,7 @@ const initMiddlewares = (
   middleware.forEach(middlewareItem => {
     const middlewareFunc =
       typeof middlewareItem === 'string'
-        ? requireModule(middlewareItem)
+        ? compatRequire(middlewareItem)
         : middlewareItem;
     app.use(middlewareFunc);
   });
@@ -57,12 +55,15 @@ const initApp = (app: express.Express) => {
   return app;
 };
 
-export default createPlugin(
-  () => ({
-    // eslint-disable-next-line max-statements
+export default (): ServerPlugin => ({
+  name: '@modern-js/plugin-express',
+  pre: ['@modern-js/plugin-bff'],
+  setup: api => ({
     async prepareApiServer({ pwd, mode, config }) {
       let app: Express;
       const apiDir = path.join(pwd, './api');
+      const appContext = api.useAppContext();
+      const apiHandlerInfos = appContext.apiHandlerInfos as APIHandlerInfo[];
       if (mode === 'framework') {
         app = await findAppModule(apiDir);
 
@@ -76,10 +77,9 @@ export default createPlugin(
           const { middleware } = config as FrameConfig;
           initMiddlewares(middleware, app);
         }
-        // eslint-disable-next-line react-hooks/rules-of-hooks
         useRun(app);
 
-        registerRoutes(app);
+        registerRoutes(app, apiHandlerInfos);
       } else if (mode === 'function') {
         app = express();
         initApp(app);
@@ -89,10 +89,9 @@ export default createPlugin(
           initMiddlewares(middleware, app);
         }
 
-        // eslint-disable-next-line react-hooks/rules-of-hooks
         useRun(app);
 
-        registerRoutes(app);
+        registerRoutes(app, apiHandlerInfos);
       } else {
         throw new Error(`mode must be function or framework`);
       }
@@ -150,8 +149,4 @@ export default createPlugin(
         });
     },
   }),
-  {
-    name: '@modern-js/plugin-express',
-    pre: ['@modern-js/plugin-bff'],
-  },
-) as any;
+});

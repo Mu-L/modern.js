@@ -5,21 +5,16 @@ import {
   LOADABLE_STATS_FILE,
   isUseSSRBundle,
   createRuntimeExportsUtils,
-  PLUGIN_SCHEMAS,
+  isSingleEntry,
 } from '@modern-js/utils';
-import {
-  createPlugin,
-  useAppContext,
-  useResolvedConfigContext,
-} from '@modern-js/core';
-import LoadableWebpackPlugin from '@loadable/webpack-plugin';
-import type WebpackChain from 'webpack-chain';
-import type { BabelChain } from '@modern-js/babel-chain';
+import type { CliPlugin, SSGMultiEntryOptions } from '@modern-js/core';
 
 const PLUGIN_IDENTIFIER = 'ssr';
 
-export default createPlugin(
-  (() => {
+export default (): CliPlugin => ({
+  name: '@modern-js/plugin-ssr',
+  required: ['@modern-js/runtime'],
+  setup: api => {
     const ssrConfigMap = new Map<string, any>();
 
     let pluginsExportsUtils: any;
@@ -27,9 +22,7 @@ export default createPlugin(
 
     return {
       config() {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        const appContext = useAppContext();
-
+        const appContext = api.useAppContext();
         pluginsExportsUtils = createRuntimeExportsUtils(
           appContext.internalDirectory,
           'plugins',
@@ -42,53 +35,51 @@ export default createPlugin(
             },
           },
           tools: {
-            webpack: (config: any, { chain }: { chain: WebpackChain }) => {
-              // eslint-disable-next-line react-hooks/rules-of-hooks
-              const userConfig = useResolvedConfigContext();
-              if (isUseSSRBundle(userConfig) && config.name !== 'server') {
+            webpackChain: (chain, { name, CHAIN_ID }) => {
+              const userConfig = api.useResolvedConfigContext();
+              if (isUseSSRBundle(userConfig) && name !== 'server') {
+                const LoadableWebpackPlugin = require('@modern-js/webpack/@loadable/webpack-plugin');
                 chain
-                  .plugin('loadable')
+                  .plugin(CHAIN_ID.PLUGIN.LOADABLE)
                   .use(LoadableWebpackPlugin, [
                     { filename: LOADABLE_STATS_FILE },
                   ]);
               }
             },
-            babel: (config: any, { chain }: { chain: BabelChain }) => {
-              // eslint-disable-next-line react-hooks/rules-of-hooks
-              const userConfig = useResolvedConfigContext();
+            babel: (config: any) => {
+              const userConfig = api.useResolvedConfigContext();
               if (isUseSSRBundle(userConfig)) {
-                chain
-                  ?.plugin('loadable')
-                  .use(require.resolve('@loadable/babel-plugin'));
+                config.plugins.push(require.resolve('@loadable/babel-plugin'));
               }
             },
           },
         };
       },
-      validateSchema() {
-        return PLUGIN_SCHEMAS['@modern-js/plugin-ssr'];
-      },
       modifyEntryImports({ entrypoint, imports }: any) {
         const { entryName } = entrypoint;
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        const userConfig = useResolvedConfigContext();
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        const { packageName } = useAppContext();
+        const userConfig = api.useResolvedConfigContext();
+        const { packageName, entrypoints } = api.useAppContext();
 
         pluginsExportsUtils.addExport(
           `export { default as ssr } from '${ssrModulePath}'`,
         );
 
+        // if use ssg then set ssr config to true
         const ssrConfig = getEntryOptions(
           entryName,
-          userConfig.server.ssr || Boolean((userConfig.output as any).ssg),
+          userConfig.server.ssr,
           userConfig.server.ssrByEntries,
           packageName,
         );
 
-        ssrConfigMap.set(entryName, ssrConfig);
+        const ssgConfig = userConfig.output.ssg;
+        const useSSG = isSingleEntry(entrypoints)
+          ? Boolean(ssgConfig)
+          : ssgConfig === true ||
+            Boolean((ssgConfig as SSGMultiEntryOptions)?.[entryName]);
 
-        if (ssrConfig) {
+        ssrConfigMap.set(entryName, ssrConfig || useSSG);
+        if (ssrConfig || useSSG) {
           imports.push({
             value: '@modern-js/runtime/plugins',
             specifiers: [{ imported: PLUGIN_IDENTIFIER }],
@@ -126,9 +117,5 @@ export default createPlugin(
         return { entrypoint, exportStatement };
       },
     };
-  }) as any,
-  {
-    name: '@modern-js/plugin-ssr',
-    required: ['@modern-js/runtime'],
   },
-);
+});

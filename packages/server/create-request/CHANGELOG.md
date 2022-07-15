@@ -1,5 +1,125 @@
 # @modern-js/create-request
 
+## 1.3.0
+
+### Minor Changes
+
+- 77a8e9e: feat: throw error when response is not ok
+
+### Patch Changes
+
+- Updated dependencies [43b2224]
+- Updated dependencies [2dacc89]
+- Updated dependencies [a90bc96]
+  - @modern-js/plugin-ssr@1.4.6
+  - @modern-js/utils@1.7.9
+
+## 1.2.11
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+- Updated dependencies [a1198d509]
+  - @modern-js/plugin-ssr@1.4.5
+
+## 1.2.10
+
+### Patch Changes
+
+- bfccb4c8: fix: support params for bff schema
+- Updated dependencies [6451a098]
+- Updated dependencies [192dbc78]
+- Updated dependencies [d5a2cfd8]
+- Updated dependencies [437367c6]
+- Updated dependencies [7394df61]
+  - @modern-js/utils@1.7.6
+  - @modern-js/plugin-ssr@1.4.2
+
+## 1.2.8
+
+### Patch Changes
+
+- d32f35134: chore: add modern/jest/eslint/ts config files to .npmignore
+- Updated dependencies [d32f35134]
+- Updated dependencies [6ae4a34ae]
+- Updated dependencies [97086dde8]
+- Updated dependencies [b80229c79]
+- Updated dependencies [5bfb57321]
+- Updated dependencies [948cc4436]
+  - @modern-js/utils@1.7.3
+  - @modern-js/plugin-ssr@1.3.2
+
+## 1.2.7
+
+### Patch Changes
+
+- 69a728375: fix: remove exports.jsnext:source after publish
+- Updated dependencies [cd7346b0d]
+- Updated dependencies [0e0537005]
+- Updated dependencies [69a728375]
+  - @modern-js/utils@1.7.2
+  - @modern-js/plugin-ssr@1.3.1
+
+## 1.2.6
+
+### Patch Changes
+
+- 4697d1db: fix: remove webpack-node-external for server bundle
+- Updated dependencies [0ee4bb4e]
+- Updated dependencies [a4c5fe78]
+- Updated dependencies [6fa74d5f]
+- Updated dependencies [33386756]
+  - @modern-js/plugin-ssr@1.3.0
+  - @modern-js/utils@1.7.0
+
+## 1.2.5
+
+### Patch Changes
+
+- 0fccff68: feat: support array for bff request query
+- Updated dependencies [2d155c4c]
+- Updated dependencies [a0475f1a]
+- Updated dependencies [123e432d]
+- Updated dependencies [e5a9b26d]
+- Updated dependencies [0b26b93b]
+- Updated dependencies [123e432d]
+- Updated dependencies [f9f66ef9]
+- Updated dependencies [592edabc]
+- Updated dependencies [895fa0ff]
+- Updated dependencies [3578913e]
+- Updated dependencies [1c3beab3]
+  - @modern-js/utils@1.6.0
+  - @modern-js/plugin-ssr@1.2.8
+
+## 1.2.4
+
+### Patch Changes
+
+- 60f7d8bf: feat: add tests dir to npmignore
+- Updated dependencies [b8599d09]
+- Updated dependencies [60f7d8bf]
+- Updated dependencies [e4cec1ce]
+- Updated dependencies [3bf4f8b0]
+  - @modern-js/utils@1.5.0
+  - @modern-js/plugin-ssr@1.2.7
+
+## 1.2.3
+
+### Patch Changes
+
+- 6800be3b: feat: move storage from plugin-ssr to utils
+- Updated dependencies [6800be3b]
+  - @modern-js/plugin-ssr@1.2.6
+  - @modern-js/utils@1.4.1
+
+## 1.2.2
+
+### Patch Changes
+
+- 3eee457b: fix: move some peerDependencies to dependecies
+- Updated dependencies [db43dce6]
+  - @modern-js/utils@1.3.4
+
 ## 1.2.1
 
 ### Patch Changes

@@ -27,6 +27,7 @@ coverage/
 release/
 output/
 output_resource/
+tests/
 
 .vscode/**/*
 !.vscode/settings.json
@@ -34,8 +35,15 @@ output_resource/
 .idea/
 
 **/*/api/typings/auto-generated
-**/*/adapters/**/index.ts
-**/*/adapters/**/index.js
 
 .cache
 src/
+
+modern.config.js
+modern.config.ts
+jest.config.js
+.eslintrc.js
+.eslintrc
+tsconfig.json
+
+.wireit/

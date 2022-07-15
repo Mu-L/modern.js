@@ -1,9 +1,10 @@
 import path from 'path';
+import { address } from '@modern-js/utils';
 import { createContext } from '@modern-js/plugin';
-import address from 'address';
 import type { IAppContext } from '@modern-js/types';
 import { UserConfig } from './config';
 import { NormalizedConfig } from './config/mergeConfig';
+import type { LoadedPlugin } from './loadPlugins';
 
 export type { IAppContext };
 
@@ -15,26 +16,45 @@ export const ResolvedConfigContext = createContext<NormalizedConfig>(
   {} as NormalizedConfig,
 );
 
+/**
+ * Set app context.
+ * @param value new app context. It will override previous app context.
+ */
+export const setAppContext = (value: IAppContext) => AppContext.set(value);
+
+/**
+ * Get app context, including directories, plugins and some static infos.
+ */
 export const useAppContext = () => AppContext.use().value;
 
+/**
+ * Get original content of user config.
+ */
 export const useConfigContext = () => ConfigContext.use().value;
 
+/**
+ * Get normalized content of user config.
+ */
 export const useResolvedConfigContext = () => ResolvedConfigContext.use().value;
 
-export const initAppContext = (
-  appDirectory: string,
-  plugins: Array<{
-    cli: any;
-    server: any;
-  }>,
-  configFile: string | false,
+export const initAppContext = ({
+  appDirectory,
+  plugins,
+  configFile,
+  options,
+  serverConfigFile,
+}: {
+  appDirectory: string;
+  plugins: LoadedPlugin[];
+  configFile: string | false;
   options?: {
     metaName?: string;
     srcDir?: string;
     distDir?: string;
     sharedDir?: string;
-  },
-): IAppContext => {
+  };
+  serverConfigFile: string;
+}): IAppContext => {
   const {
     metaName = 'modern-js',
     srcDir = 'src',
@@ -46,6 +66,7 @@ export const initAppContext = (
     metaName,
     appDirectory,
     configFile,
+    serverConfigFile,
     ip: address.ip(),
     port: 0,
     packageName: require(path.resolve(appDirectory, './package.json')).name,
@@ -61,7 +82,8 @@ export const initAppContext = (
     htmlTemplates: {},
     serverRoutes: [],
     entrypoints: [],
-    existSrc: true,
+    checkedEntries: [],
+    apiOnly: false,
     internalDirAlias: `@_${metaName.replace(/-/g, '_')}_internal`,
     internalSrcAlias: `@_${metaName.replace(/-/g, '_')}_src`,
   };

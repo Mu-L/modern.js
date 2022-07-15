@@ -1,253 +1,205 @@
-// eslint-disable-next-line eslint-comments/disable-enable-pair
-/* eslint-disable max-lines */
+import { isPipeline, createPipeline } from '../farrow-pipeline';
 import {
-  Middleware,
-  Pipeline,
-  isPipeline,
-  createPipeline,
-  AsyncPipeline,
-  MaybeAsync,
-  runWithContainer,
-  createContainer,
-  Container,
-} from 'farrow-pipeline';
-import {
-  Waterfall,
-  Brook,
   isWaterfall,
   createWaterfall,
-  AsyncWaterfall,
-  AsyncBrook,
   isAsyncWaterfall,
   createAsyncWaterfall,
 } from '../waterfall';
 import {
-  Worker,
-  Workflow,
   isWorkflow,
   createWorkflow,
-  AsyncWorker,
-  AsyncWorkflow,
   isAsyncWorkflow,
   createAsyncWorkflow,
-  ParallelWorkflow,
   isParallelWorkflow,
   createParallelWorkflow,
 } from '../workflow';
-import { RunnerContext, useRunner } from './runner';
+import {
+  checkPlugins,
+  hasOwnProperty,
+  includePlugin,
+  isObject,
+  sortPlugins,
+} from './shared';
+import type {
+  Hook,
+  CommonAPI,
+  ToRunners,
+  ToThreads,
+  PluginOptions,
+} from './types';
 
-// eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-export type Initializer<O> = () => O | void;
+/** Setup function of sync plugin. */
+export type Setup<Hooks, API = Record<string, never>> = (
+  api: API,
+) => Partial<ToThreads<Hooks>> | void;
 
 const SYNC_PLUGIN_SYMBOL = 'SYNC_PLUGIN_SYMBOL';
 
-export type Plugin<O> = {
-  initializer: Initializer<O>;
+export type Plugin<Hooks, API> = {
   SYNC_PLUGIN_SYMBOL: typeof SYNC_PLUGIN_SYMBOL;
-} & Required<PluginOptions>;
+} & Required<PluginOptions<Hooks, Setup<Hooks, API>>>;
 
-export type IndexPlugin<O> = Plugin<O> & {
-  index: number;
-};
-
-export type Plugins<O> = Plugin<O>[];
-export type IndexPlugins<O> = IndexPlugin<O>[];
-
-export type PluginOptions = {
-  name?: string;
-  pre?: string[];
-  post?: string[];
-  rivals?: string[];
-  required?: string[];
-};
-
-export type Progress =
-  | Waterfall<any>
-  | AsyncWaterfall<any>
-  | Workflow<any, any>
-  | AsyncWorkflow<any, any>
-  | ParallelWorkflow<any>
-  | Pipeline<any, any>
-  | AsyncPipeline<any, any>;
-
-export type Progress2Thread<P extends Progress> = P extends Workflow<
-  infer I,
-  infer O
->
-  ? Worker<I, O>
-  : P extends AsyncWorkflow<infer I, infer O>
-  ? AsyncWorker<I, O>
-  : P extends ParallelWorkflow<infer I, infer O>
-  ? AsyncWorker<I, O>
-  : P extends Waterfall<infer I>
-  ? Brook<I>
-  : P extends AsyncWaterfall<infer I>
-  ? AsyncBrook<I>
-  : P extends Pipeline<infer I, infer O>
-  ? Middleware<I, O>
-  : P extends AsyncPipeline<infer I, infer O>
-  ? Middleware<I, MaybeAsync<O>>
-  : never;
-
-export type ProgressRecord = Record<string, Progress>;
-
-// eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-export type Progresses2Threads<PS extends ProgressRecord | void> = {
-  [K in keyof PS]: PS[K] extends Progress
-    ? Progress2Thread<PS[K]>
-    : // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-    PS[K] extends void
-    ? // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-      void
-    : never;
-};
-
-export type RunnerFromProgress<P extends Progress> = P extends Waterfall<
-  infer I
->
-  ? Waterfall<I>['run']
-  : P extends AsyncWaterfall<infer I>
-  ? AsyncWaterfall<I>['run']
-  : P extends Workflow<infer I, infer O>
-  ? Workflow<I, O>['run']
-  : P extends AsyncWorkflow<infer I, infer O>
-  ? AsyncWorkflow<I, O>['run']
-  : P extends ParallelWorkflow<infer I, infer O>
-  ? ParallelWorkflow<I, O>['run']
-  : P extends Pipeline<infer I, infer O>
-  ? Pipeline<I, O>['run']
-  : P extends AsyncPipeline<infer I, infer O>
-  ? AsyncPipeline<I, O>['run']
-  : never;
-
-// eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-export type Progresses2Runners<PS extends ProgressRecord | void> = {
-  [K in keyof PS]: PS[K] extends Progress
-    ? RunnerFromProgress<PS[K]>
-    : // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-    PS[K] extends void
-    ? // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-      void
-    : never;
-};
-
-export type ClearDraftProgress<I extends Record<string, any>> = {
-  [K in keyof I]: I[K] extends Progress ? I[K] : never;
-};
-
-export type PluginFromManager<M extends Manager<any, any>> = M extends Manager<
-  infer EP,
-  infer PR
->
-  ? Plugin<Partial<Progresses2Threads<PR & ClearDraftProgress<EP>>>>
-  : never;
-export type InitOptions = {
-  container?: Container;
-};
-export type Manager<
-  EP extends Record<string, any>,
-  // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-  PR extends ProgressRecord | void = void,
-> = {
+export type Manager<Hooks, API> = {
+  /**
+   * Create a sync plugin.
+   * @param setup the setup function.
+   * @param options optional plugin options.
+   */
   createPlugin: (
-    initializer: Initializer<
-      Partial<Progresses2Threads<PR & ClearDraftProgress<EP>>>
-    >,
-    options?: PluginOptions,
-  ) => Plugin<Partial<Progresses2Threads<PR & ClearDraftProgress<EP>>>>;
-  isPlugin: (
-    input: Record<string, unknown>,
-  ) => input is Plugin<
-    Partial<Progresses2Threads<PR & ClearDraftProgress<EP>>>
-  >;
+    setup?: Setup<Hooks, API>,
+    options?: PluginOptions<Hooks, Setup<Hooks, API>>,
+  ) => Plugin<Hooks, API>;
+
+  /**
+   * Determine if a value is a sync plugin.
+   * @param input
+   */
+  isPlugin: (input: unknown) => input is Plugin<Hooks, API>;
+
+  /**
+   * Register new plugins to current manager.
+   * @param plugins one or more plugin.
+   */
   usePlugin: (
-    ...input: Plugins<Partial<Progresses2Threads<PR & ClearDraftProgress<EP>>>>
-  ) => Manager<EP, PR>;
-  init: (
-    options?: InitOptions,
-  ) => Progresses2Runners<PR & ClearDraftProgress<EP>>;
-  run: <O>(cb: () => O, options?: InitOptions) => O;
-  registe: (newShape: Partial<EP>) => void;
+    ...plugins: Array<
+      | Plugin<Hooks, API>
+      | PluginOptions<Hooks, Setup<Hooks, API>>
+      | (() => PluginOptions<Hooks, Setup<Hooks, API>>)
+    >
+  ) => Manager<Hooks, API>;
+
+  /**
+   * Init manager, it will call the setup function of all registered plugins.
+   */
+  init: () => ToRunners<Hooks>;
+
+  /**
+   * Run callback function.
+   * @param callback
+   */
+  run: <O>(cb: () => O) => O;
+
+  /**
+   * Register new hooks.
+   * @param newHooks
+   */
+  registerHook: (hewHooks: Partial<Hooks>) => void;
+
+  /**
+   * Clear all registered plugins.
+   */
   clear: () => void;
-  clone: () => Manager<EP, PR>;
-  useRunner: () => Progresses2Runners<PR & ClearDraftProgress<EP>>;
+
+  /**
+   * Return a cloned manager.
+   * @param overrideAPI override the default plugin API.
+   */
+  clone: (overrideAPI?: Partial<API & CommonAPI<Hooks>>) => Manager<Hooks, API>;
+
+  /**
+   * Get all runner functions of the hooks.
+   */
+  useRunner: () => ToRunners<Hooks>;
 };
 
-export const DEFAULT_OPTIONS: Required<PluginOptions> = {
+export const DEFAULT_OPTIONS = {
   name: 'untitled',
   pre: [],
   post: [],
   rivals: [],
   required: [],
+  usePlugins: [],
+  registerHook: {},
 };
 
 export const createManager = <
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  EP extends Record<string, any> = {},
-  // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-  PR extends ProgressRecord | void = void,
+  Hooks,
+  API extends Record<string, any> = Record<string, never>,
 >(
-  processes?: PR,
-): Manager<EP, PR> => {
+  hooks?: Partial<Hooks>,
+  api?: API,
+): Manager<Hooks, API> => {
   let index = 0;
-  const createPlugin: Manager<EP, PR>['createPlugin'] = (
-    initializer,
-    options = {},
-  ) => ({
-    ...DEFAULT_OPTIONS,
-    name: `No.${index++} plugin`,
-    ...options,
-    SYNC_PLUGIN_SYMBOL,
-    initializer,
-  });
+  let runners: ToRunners<Hooks>;
+  let currentHooks = { ...hooks } as Hooks;
 
-  const isPlugin: Manager<EP, PR>['isPlugin'] = (
+  const useRunner = () => runners;
+
+  const registerHook: Manager<Hooks, API>['registerHook'] = extraHooks => {
+    currentHooks = {
+      ...extraHooks,
+      ...currentHooks,
+    };
+  };
+
+  const isPlugin: Manager<Hooks, API>['isPlugin'] = (
     input,
-  ): input is Plugin<
-    Partial<Progresses2Threads<PR & ClearDraftProgress<EP>>>
-  > =>
+  ): input is Plugin<Hooks, API> =>
+    isObject(input) &&
     hasOwnProperty(input, SYNC_PLUGIN_SYMBOL) &&
     input[SYNC_PLUGIN_SYMBOL] === SYNC_PLUGIN_SYMBOL;
 
-  const registe: Manager<EP, PR>['registe'] = extraProcesses => {
-    // eslint-disable-next-line no-param-reassign
-    processes = {
-      ...extraProcesses,
-      ...processes,
-    } as any;
-  };
+  type PluginAPI = API & CommonAPI<Hooks>;
 
-  const clone = () => {
-    let plugins: IndexPlugins<
-      Partial<Progresses2Threads<PR & ClearDraftProgress<EP>>>
-    > = [];
+  const pluginAPI = {
+    ...api,
+    useHookRunners: useRunner,
+  } as PluginAPI;
 
-    const usePlugin: Manager<EP, PR>['usePlugin'] = (...input) => {
-      for (const plugin of input) {
+  const clone = (overrideAPI?: Partial<PluginAPI>) => {
+    let plugins: Plugin<Hooks, API>[] = [];
+
+    const addPlugin = (plugin: Plugin<Hooks, API>) => {
+      if (!includePlugin(plugins, plugin)) {
+        plugins.push({ ...plugin });
+      }
+    };
+
+    const usePlugin: Manager<Hooks, API>['usePlugin'] = (...input) => {
+      input.forEach(plugin => {
+        // already created by createPlugin
         if (isPlugin(plugin)) {
-          if (!includePlugin(plugins, plugin)) {
-            plugins.push({
-              ...plugin,
-              index: plugins.length,
-            });
-          }
-        } else {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-expect-error
-          console.warn(`Unknown plugin: ${plugin.name}`);
+          addPlugin(plugin);
         }
+        // using function to return plugin options
+        else if (typeof plugin === 'function') {
+          const options = plugin();
+          addPlugin(createPlugin(options.setup, options));
+        }
+        // plain plugin object
+        else if (isObject(plugin)) {
+          addPlugin(createPlugin(plugin.setup, plugin));
+        }
+        // unknown plugin
+        else {
+          console.warn(`Unknown plugin: ${JSON.stringify(plugin)}`);
+        }
+      });
+
+      return manager;
+    };
+
+    const createPlugin: Manager<Hooks, API>['createPlugin'] = (
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      setup = () => {},
+      options = {},
+    ) => {
+      if (options.usePlugins?.length) {
+        options.usePlugins.forEach(plugin => {
+          usePlugin(createPlugin(plugin.setup, plugin));
+        });
+      }
+
+      if (options.registerHook) {
+        registerHook(options.registerHook);
       }
 
       return {
-        createPlugin,
-        isPlugin,
-        usePlugin,
-        init,
-        run,
-        clear,
-        registe,
-        useRunner,
-        clone,
+        ...DEFAULT_OPTIONS,
+        name: `No.${index++} plugin`,
+        ...options,
+        SYNC_PLUGIN_SYMBOL,
+        setup,
       };
     };
 
@@ -255,69 +207,57 @@ export const createManager = <
       plugins = [];
     };
 
-    const currentContainer = createContainer();
-
-    const init: Manager<EP, PR>['init'] = options => {
-      const container = options?.container || currentContainer;
-
+    const init: Manager<Hooks, API>['init'] = () => {
       const sortedPlugins = sortPlugins(plugins);
+      const mergedPluginAPI = {
+        ...pluginAPI,
+        ...overrideAPI,
+      };
 
       checkPlugins(sortedPlugins);
 
       const hooksList = sortedPlugins.map(plugin =>
-        runWithContainer(() => plugin.initializer(), container),
+        plugin.setup(mergedPluginAPI),
       );
 
-      return generateRunner<EP, PR>(hooksList, container, processes);
+      runners = generateRunner<Hooks>(hooksList, currentHooks);
+      return runners;
     };
 
-    const run: Manager<EP, PR>['run'] = (cb, options) => {
-      const container = options?.container || currentContainer;
+    const run: Manager<Hooks, API>['run'] = cb => cb();
 
-      return runWithContainer(cb, container);
-    };
-
-    return {
+    const manager = {
       createPlugin,
       isPlugin,
       usePlugin,
       init,
       clear,
       run,
-      registe,
+      registerHook,
       useRunner,
       clone,
     };
+
+    return manager;
   };
 
   return clone();
 };
 
-export const generateRunner = <
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  EP extends Record<string, any> = {},
-  // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-  PR extends ProgressRecord | void = void,
->(
-  // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-  hooksList: (void | Partial<
-    Progresses2Threads<PR & ClearDraftProgress<EP>>
-  >)[],
-  container: Container,
-  processes?: PR,
-): Progresses2Runners<PR & ClearDraftProgress<EP>> => {
+export const generateRunner = <Hooks extends Record<string, any>>(
+  hooksList: (void | Partial<ToThreads<Hooks>>)[],
+  hooksMap?: Hooks,
+): ToRunners<Hooks> => {
   const runner = {};
-  const cloneShape = cloneProgressRecord(processes);
+  const cloneShape = cloneHooksMap(hooksMap);
 
-  if (processes) {
+  if (hooksMap) {
     for (const key in cloneShape) {
       for (const hooks of hooksList) {
         if (!hooks) {
           continue;
         }
         if (hooks[key]) {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-expect-error
           cloneShape[key].use(hooks[key]);
         }
       }
@@ -325,134 +265,54 @@ export const generateRunner = <
       // @ts-expect-error
       runner[key] = (input: any, options: any) =>
         (cloneShape[key] as any).run(input, {
-          container,
           ...options,
         });
     }
   }
 
-  container.write(RunnerContext, runner);
-  return runner as any;
+  return runner as ToRunners<Hooks>;
 };
 
-export const cloneProgress = (progress: Progress): Progress => {
-  if (isWaterfall(progress)) {
+export const cloneHook = (hook: Hook): Hook => {
+  if (isWaterfall(hook)) {
     return createWaterfall();
   }
 
-  if (isAsyncWaterfall(progress)) {
+  if (isAsyncWaterfall(hook)) {
     return createAsyncWaterfall();
   }
 
-  if (isWorkflow(progress)) {
+  if (isWorkflow(hook)) {
     return createWorkflow();
   }
 
-  if (isAsyncWorkflow(progress)) {
+  if (isAsyncWorkflow(hook)) {
     return createAsyncWorkflow();
   }
 
-  if (isParallelWorkflow(progress)) {
+  if (isParallelWorkflow(hook)) {
     return createParallelWorkflow();
   }
 
-  if (isPipeline(progress)) {
+  if (isPipeline(hook)) {
     return createPipeline();
   }
 
-  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-  throw new Error(`Unknown progress: ${progress}`);
+  throw new Error(`Unknown hook: ${hook}`);
 };
 
-// eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-export const cloneProgressRecord = <PR extends ProgressRecord | void>(
-  record: PR,
-): PR => {
+export const cloneHooksMap = <Hooks>(record: Hooks): Hooks => {
   if (!record) {
     return record;
   }
 
-  const result: PR = {} as any;
+  const result: Hooks = {} as any;
 
   for (const key in record) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
-    result[key] = cloneProgress(record[key]);
+    result[key] = cloneHook(record[key]);
   }
 
   return result;
 };
-
-const includePlugin = <O>(plugins: Plugins<O>, input: Plugin<O>): boolean => {
-  for (const plugin of plugins) {
-    if (plugin.name === input.name) {
-      return true;
-    }
-  }
-
-  return false;
-};
-
-const sortPlugins = <O>(input: IndexPlugins<O>): IndexPlugins<O> => {
-  let plugins = input.slice();
-
-  for (let i = 0; i < plugins.length; i++) {
-    const plugin = plugins[i];
-
-    for (const pre of plugin.pre) {
-      for (let j = i + 1; j < plugins.length; j++) {
-        if (plugins[j].name === pre) {
-          plugins = [
-            ...plugins.slice(0, i),
-            plugins[j],
-            ...plugins.slice(i, j),
-            ...plugins.slice(j + 1, plugins.length),
-          ];
-        }
-      }
-    }
-
-    for (const post of plugin.post) {
-      for (let j = 0; j < i; j++) {
-        if (plugins[j].name === post) {
-          plugins = [
-            ...plugins.slice(0, j),
-            ...plugins.slice(j + 1, i + 1),
-            plugins[j],
-            ...plugins.slice(i + 1, plugins.length),
-          ];
-        }
-      }
-    }
-  }
-
-  return plugins;
-};
-
-const checkPlugins = <O>(plugins: Plugins<O>) => {
-  for (const origin of plugins) {
-    for (const rival of origin.rivals) {
-      for (const plugin of plugins) {
-        if (rival === plugin.name) {
-          throw new Error(`${origin.name} has rival ${plugin.name}`);
-        }
-      }
-    }
-
-    for (const required of origin.required) {
-      if (!plugins.some(plugin => plugin.name === required)) {
-        throw new Error(
-          `The plugin: ${required} is required when plugin: ${origin.name} is exist.`,
-        );
-      }
-    }
-  }
-};
-
-export const hasOwnProperty = <
-  X extends Record<string, unknown>,
-  Y extends PropertyKey,
->(
-  obj: X,
-  prop: Y,
-): obj is X & Record<Y, unknown> => obj.hasOwnProperty(prop);

@@ -7,23 +7,25 @@ import koaStatic from 'koa-static';
 import koaCors from '@koa/cors';
 import c2k from 'koa-connect';
 import type { Plugin as RollupPlugin } from 'rollup';
-import { FSWatcher } from 'chokidar';
 import {
   chalk,
+  FSWatcher,
   HMR_SOCK_PATH,
   isTypescript,
   prettyInstructions,
   clearConsole,
+  getPackageManager,
 } from '@modern-js/utils';
-import { IAppContext, mountHook, NormalizedConfig } from '@modern-js/core';
+import type { IAppContext, NormalizedConfig, PluginAPI } from '@modern-js/core';
 // FIXME: 很奇怪，换了名字之后就可以编译通过了，可能 `macro` 这个名字有啥特殊的含义？
 import { macrosPlugin } from './plugins/_macro';
-import { lanuchEditorMiddleware } from './middlewares/lanuch-editor';
+import { launchEditorMiddleware } from './middlewares/launch-editor';
 import { assetsPlugin } from './plugins/assets';
 import { transformMiddleware } from './middlewares/transform';
 import { WebSocketServer, onFileChange } from './websocket-server';
 import {
   DEFAULT_DEPS,
+  DEFAULT_PDN_HOST,
   HOST,
   MODERN_JS_INTERNAL_PACKAGES,
   VIRTUAL_DEPS_MAP,
@@ -31,6 +33,7 @@ import {
 import { optimizeDeps } from './install/local-optimize';
 import {
   getBFFMiddleware,
+  setIgnoreDependencies,
   shouldEnableBabelMacros,
   shouldUseBff,
 } from './utils';
@@ -62,6 +65,7 @@ export interface ESMServer {
   wsServer: WebSocketServer;
   watcher: FSWatcher;
   pluginContainer: PluginContainer;
+  closeServer: () => Promise<void>;
 }
 
 export const createDevServer = async (
@@ -112,14 +116,33 @@ export const createDevServer = async (
     wsServer,
     watcher,
     pluginContainer,
+    closeServer: async () => {
+      const httpServerClosePromise = new Promise<void>((resolve, reject) => {
+        httpServer.close(err => {
+          if (!err) {
+            resolve();
+          } else {
+            reject(err);
+          }
+        });
+      });
+      const wsServerClosePromise = wsServer.close();
+      const fileWatcherClosePromise = watcher.close();
+      pluginContainer.closeWatcher();
+      await Promise.all([
+        httpServerClosePromise,
+        wsServerClosePromise,
+        fileWatcherClosePromise,
+      ]);
+    },
   };
 
   watcher.on('change', filename => onFileChange(server, filename));
 
-  // keep it at the beginning of the middleware chain to catch interal error
+  // keep it at the beginning of the middleware chain to catch internal error
   app.use(errorOverlayMiddleware(server));
 
-  app.use(lanuchEditorMiddleware());
+  app.use(launchEditorMiddleware());
 
   proxyMiddleware(config, appContext).map(middleware =>
     app.use(c2k(middleware)),
@@ -157,13 +180,14 @@ export const createDevServer = async (
     });
   }
 
-  // hanlde 404
+  // handle 404
   app.use(notFoundMiddleware());
 
   return server;
 };
 
 export const startDevServer = async (
+  api: PluginAPI,
   userConfig: NormalizedConfig,
   appContext: IAppContext,
 ) => {
@@ -172,13 +196,17 @@ export const startDevServer = async (
   // TODO: bff
   // await setupBFFAPI(userConfig, api, port);
 
-  const dependencies = await mountHook().unbundleDependencies({
+  const hookRunners = api.useHookRunners();
+  const dependencies = await hookRunners.unbundleDependencies({
     defaultDeps: DEFAULT_DEPS,
     internalPackages: MODERN_JS_INTERNAL_PACKAGES,
     virtualDeps: VIRTUAL_DEPS_MAP,
+    defaultPdnHost: DEFAULT_PDN_HOST,
   });
 
-  const { httpServer, pluginContainer } = await createDevServer(
+  setIgnoreDependencies(userConfig, dependencies.virtualDeps);
+
+  const { httpServer, pluginContainer, closeServer } = await createDevServer(
     userConfig,
     appContext,
     dependencies,
@@ -189,10 +217,10 @@ export const startDevServer = async (
   await optimizeDeps({
     userConfig,
     appContext,
-    defaultDependencies: dependencies.defaultDeps,
-    virtualDependenciesMap: dependencies.virtualDeps,
-    internalPackages: dependencies.internalPackages,
+    dependencies,
   });
+
+  const packageManager = await getPackageManager(appContext.appDirectory);
 
   httpServer.listen(port, HOST, () => {
     startTimer.end = Date.now();
@@ -210,13 +238,15 @@ export const startDevServer = async (
     message += `\n${chalk.cyanBright(
       [
         `Note that unbundle mode require native ESM dynamic import support.`,
-        `To dev for legacy browsers, use yarn dev.`,
+        `To dev for legacy browsers, use ${packageManager} run dev.`,
       ].join('\n'),
     )}`;
 
     // eslint-disable-next-line no-console
     console.log(message);
   });
+
+  return closeServer;
 };
 
 const createHttpsServer = async (app: Koa): Promise<Server> => {

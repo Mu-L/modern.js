@@ -12,7 +12,6 @@ export enum ActionElement {
 }
 
 export enum ActionFunction {
-  UnBundle = 'unbundle',
   TailwindCSS = 'tailwindcss',
   Less = 'less',
   Sass = 'sass',
@@ -28,6 +27,7 @@ export enum ActionFunction {
   SSG = 'ssg',
   Polyfill = 'polyfill',
   Deploy = 'deploy',
+  Proxy = 'proxy',
 }
 
 export enum ActionRefactor {
@@ -46,7 +46,6 @@ export const ActionElementText: Record<ActionElement, () => string> = {
 };
 
 export const ActionFunctionText: Record<ActionFunction, () => string> = {
-  [ActionFunction.UnBundle]: () => i18n.t(localeKeys.action.function.unbundle),
   [ActionFunction.TailwindCSS]: () =>
     i18n.t(localeKeys.action.function.tailwindcss),
   [ActionFunction.Less]: () => i18n.t(localeKeys.action.function.less),
@@ -66,6 +65,7 @@ export const ActionFunctionText: Record<ActionFunction, () => string> = {
   [ActionFunction.SSG]: () => i18n.t(localeKeys.action.function.ssg),
   [ActionFunction.Polyfill]: () => i18n.t(localeKeys.action.function.polyfill),
   [ActionFunction.Deploy]: () => i18n.t(localeKeys.action.function.deploy),
+  [ActionFunction.Proxy]: () => i18n.t(localeKeys.action.function.proxy),
 };
 
 export const ActionRefactorText: Record<ActionRefactor, () => string> = {

@@ -19,33 +19,51 @@ describe('function-mode', () => {
     apiHandler = await runner.prepareApiServer({
       pwd,
       mode: 'function',
+      prefix: '/api',
     });
   });
 
   test('should works with body', async () => {
-    const res = await request(apiHandler).post('/nest/user').send(foo);
+    const res = await request(apiHandler).post('/api/nest/user').send(foo);
     expect(res.status).toBe(200);
     expect(res.body.data).toEqual(foo);
   });
 
   test('should works with schema', async () => {
-    const res = await request(apiHandler).patch('/nest/user').send({
+    const res = await request(apiHandler).patch('/api/nest/user').send({
       id: 777,
       name: 'xxx',
     });
     expect(res.status).toBe(200);
     expect(res.body.id).toBe(777);
 
-    const res2 = await request(apiHandler).patch('/nest/user').send({
+    const res2 = await request(apiHandler).patch('/api/nest/user').send({
       id: 'aaa',
       name: 'xxx',
     });
     expect(res2.status).toBe(400);
 
-    const res3 = await request(apiHandler).patch('/nest/user').send({
+    const res3 = await request(apiHandler).patch('/api/nest/user').send({
       id: '777',
       name: 'xxx',
     });
     expect(res3.status).toBe(500);
+  });
+
+  test('should support upload file', done => {
+    request(apiHandler)
+      .post('/api/upload')
+      .field('my_field', 'value')
+      .attach('file', path.join(__dirname, './fixtures/assets/index.html'))
+      // https://stackoverflow.com/questions/61096108/sending-binary-file-in-express-leads-to-econnaborted
+      .set('Connection', 'keep-alive')
+      .end(async (err, res) => {
+        if (err) {
+          throw err;
+        }
+        expect(res.statusCode).toBe(200);
+        expect(res.body.message).toBe('success');
+        done();
+      });
   });
 });

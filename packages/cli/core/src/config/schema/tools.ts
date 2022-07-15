@@ -3,6 +3,7 @@ export const tools = {
   additionalProperties: false,
   properties: {
     webpack: { typeof: ['object', 'function'] },
+    webpackChain: { typeof: ['function'] },
     babel: { typeof: ['object', 'function'] },
     postcss: { typeof: ['object', 'function'] },
     lodash: { typeof: ['object', 'function'] },
@@ -11,5 +12,6 @@ export const tools = {
     autoprefixer: { typeof: ['object', 'function'] },
     terser: { typeof: ['object', 'function'] },
     minifyCss: { typeof: ['object', 'function'] },
+    styledComponents: { typeof: ['object', 'function'] },
   },
 };

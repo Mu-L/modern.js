@@ -37,6 +37,7 @@ export type LoaderResult = {
   reloading: boolean;
   data: any;
   error: any;
+  _error?: any;
 };
 
 const createLoader = (
@@ -71,30 +72,22 @@ const createLoader = (
     status = LoaderStatus.loading;
     notify();
 
-    promise = new Promise(resolve => {
-      loaderFn()
-        // eslint-disable-next-line promise/prefer-await-to-then
-        .then(value => {
-          data = value;
-          error = null;
-          status = LoaderStatus.fulfilled;
-          notify();
-          resolve(value);
-        })
-        // eslint-disable-next-line promise/prefer-await-to-then
-        .catch(e => {
-          error = e instanceof Error ? `${e.message}` : e;
-          data = null;
-          status = LoaderStatus.rejected;
-          notify();
-          resolve(e);
-        })
-        // eslint-disable-next-line promise/prefer-await-to-then
-        .finally(() => {
-          promise = null;
-          hasLoaded = true;
-        });
-    });
+    promise = loaderFn()
+      .then(value => {
+        data = value;
+        error = null;
+        status = LoaderStatus.fulfilled;
+      })
+      .catch(e => {
+        error = e;
+        data = null;
+        status = LoaderStatus.rejected;
+      })
+      .finally(() => {
+        promise = null;
+        hasLoaded = true;
+        notify();
+      });
 
     return promise;
   };
@@ -103,11 +96,14 @@ const createLoader = (
     loading: !hasLoaded && status === LoaderStatus.loading,
     reloading: hasLoaded && status === LoaderStatus.loading,
     data,
-    error,
+    error: error instanceof Error ? `${error.message}` : error,
+    // redundant fields for ssr log
+    _error: error,
   });
 
   const notify = () => {
-    handlers.forEach(handler => {
+    // don't iterate handlers directly, since it could be modified during iteration
+    [...handlers].forEach(handler => {
       handler(status, getResult());
     });
   };
@@ -136,7 +132,7 @@ const createLoader = (
 
 type ManagerOption = {
   /**
-   * wheather current manage only exec static loader
+   * whether current manage only exec static loader
    */
   skipStatic?: boolean;
   skipNonStatic?: boolean;
@@ -158,7 +154,10 @@ export const createLoaderManager = (
     const id = getId(loaderOptions.params);
     let loader = loadersMap.get(id);
 
-    if (!loader) {
+    // private property for opting out loader cache, maybe change in future
+    const cache = (loaderOptions as any)._cache;
+
+    if (!loader || cache === false) {
       // ignore non-static loader on static phase
       const ignoreNonStatic = skipNonStatic && !loaderOptions.static;
 

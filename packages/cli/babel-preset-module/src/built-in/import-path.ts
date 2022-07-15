@@ -1,43 +1,46 @@
 import path from 'path';
-import { fs } from '@modern-js/utils';
+import { fs, slash } from '@modern-js/utils';
 import { types as t } from '@babel/core';
-import type { NodePath, PluginPass } from '@babel/core';
-import type { ImportStyleType } from '../types';
-import { isProjectFile } from './utils';
+import type { NodePath, PluginPass, PluginObj } from '@babel/core';
+import type { BuiltInOptsType } from '../types';
 
-export interface IImportPathOpts {
-  appDirectory: string;
-  importStyle?: ImportStyleType;
-}
+let replaceValueHash: Record<string, string> = {};
 
-const replaceValueHash: Record<string, string> = {};
-
-const isResoureInSrc = (srcDir: string, resourecPath: string) =>
-  !path.posix.relative(srcDir, resourecPath).includes('..');
-
-const getImportFileDistPath = (
-  compilerFile: string,
-  srcDir: string,
+export const getImportFileDistPath = (
+  // importName is index.less or demo.png
   importName: string,
+  currentFilename: string,
+  opts: Pick<BuiltInOptsType, 'staticDir' | 'styleDir' | 'sourceDir'>,
 ) => {
-  const dir = path.posix.dirname(compilerFile);
-  const compilerFileRelativeLoc = path.posix.relative(dir, srcDir);
-  const importFileRelativeLoc = path.posix.relative(
-    srcDir,
-    path.posix.join(dir, importName),
+  const { staticDir = '.', styleDir = '.' } = opts;
+  const currentFileDir = path.dirname(currentFilename);
+  // NB: REL means 'relative'
+  // NB: opts.sourceDir is a absolute path
+  const crtFileRELSrcPath = path.relative(
+    currentFileDir,
+    opts.sourceDir ?? currentFileDir,
   );
-  const inSrc = isResoureInSrc(srcDir, path.posix.join(dir, importName));
-  const importFileDistPath = path.posix.join(
-    inSrc ? '..' : '../..',
-    compilerFileRelativeLoc,
-    'styles',
-    importFileRelativeLoc,
+  const importFileRELSrcPath = path.relative(
+    opts.sourceDir ?? currentFileDir,
+    path.join(currentFileDir, importName),
   );
-
-  return importFileDistPath;
+  const resourceDir = isStyleFile(importName) ? styleDir : staticDir;
+  // crtFileRELSrcPath: Relative path of the current file to the source directory
+  // resourceDir: styleDir or staticDir
+  // importFileRELPath: Relative path of the import file (eg: index.less or demo.png) to the source directory
+  const ret = path.join(crtFileRELSrcPath, resourceDir, importFileRELSrcPath);
+  return ret.startsWith('.') ? slash(ret) : slash(`./${ret}`);
 };
-
-export const isStaticFile = (file: string, filename: string) => {
+/**
+ * when the file suffix is not '.js', '.jsx', '.ts', '.tsx', return true;
+ * @param file
+ * @param filename The filename is the file currently being compiled
+ * @returns
+ */
+export const isNotJsLikeFile = (
+  importFileName: string,
+  currentCompileFile: string,
+) => {
   const tests: [RegExp, string][] = [
     [/\.js$/, '.js'],
     [/\.jsx$/, '.jsx'],
@@ -49,37 +52,54 @@ export const isStaticFile = (file: string, filename: string) => {
   // by string and determine if the file with the added suffix exists
   return !tests.some(
     ([regex, prefix]) =>
-      regex.test(file) ||
-      fs.existsSync(path.join(path.dirname(filename), file) + prefix) ||
-      fs.existsSync(path.join(path.dirname(filename), file, 'index') + prefix),
+      regex.test(importFileName) ||
+      fs.existsSync(
+        path.join(path.dirname(currentCompileFile), importFileName) + prefix,
+      ) ||
+      fs.existsSync(
+        path.join(path.dirname(currentCompileFile), importFileName, 'index') +
+          prefix,
+      ),
   );
 };
 
-const isStyleFile = (file: string) => {
+export const isStyleFile = (file: string) => {
   const tests = [/\.css$/, /\.less$/, /\.sass$/, /\.scss$/];
 
   return tests.some(regex => regex.test(file));
 };
 
-const getReplacePath = (
-  importName: string | undefined,
-  filename: string | null | undefined,
-  srcDir: string,
-  importStyle: string,
+/**
+ * Skip the following cases:
+ * + import 'xxx'
+ * + import './a.js'.
+ * + import './a' and a is js file
+ */
+export const isShouldSkip = (importName: string, filename: string) => {
+  if (importName.startsWith('./') || importName.startsWith('../')) {
+    if (isNotJsLikeFile(importName, filename)) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+export const getReplacePath = (
+  opts: BuiltInOptsType,
+  importName?: string,
+  currentFilename?: string | null,
 ) => {
-  if (!filename || !importName) {
+  const { importStyle } = opts;
+  if (!currentFilename || !importName) {
     return '';
   }
 
-  if (!isProjectFile(importName)) {
+  if (isShouldSkip(importName, currentFilename)) {
     return '';
   }
 
-  if (!isStaticFile(importName, filename)) {
-    return '';
-  }
-
-  let realFilepath = getImportFileDistPath(filename, srcDir, importName);
+  let realFilepath = getImportFileDistPath(importName, currentFilename, opts);
   if (isStyleFile(realFilepath) && importStyle === 'compiled-code') {
     realFilepath = realFilepath.replace(/\.(less|sass|scss)$/, '.css');
   }
@@ -87,27 +107,27 @@ const getReplacePath = (
   return realFilepath;
 };
 
-const importPath = () => ({
+const importPath = (): PluginObj => ({
   name: 'import-path',
+  pre() {
+    replaceValueHash = {};
+  },
   visitor: {
     Program(nodePath: NodePath<t.Program>, { opts, file }: PluginPass) {
       nodePath.traverse({
         ImportDeclaration({ node }) {
           const { source } = node;
-          const { appDirectory, importStyle = 'source-code' } =
-            opts as IImportPathOpts;
-          const srcDir = `${appDirectory}/src`;
           const {
             opts: { filename },
           } = file;
 
           const importName = source?.value ? source.value : undefined;
           const replaceValue = getReplacePath(
+            opts as BuiltInOptsType,
             importName,
             filename,
-            srcDir,
-            importStyle,
           );
+          // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
           const hashKey = filename + (importName || '');
           if (replaceValue) {
             if (typeof filename === 'string' && !replaceValueHash[hashKey]) {
@@ -125,12 +145,8 @@ const importPath = () => ({
         },
         // dynamic import
         CallExpression({ node }) {
-          const { appDirectory, importStyle = 'source-code' } =
-            opts as IImportPathOpts;
-          const srcDir = `${appDirectory}/src`;
           const { filename } = file.opts;
           const { callee, arguments: args } = node;
-
           if (
             callee.type === 'Import' ||
             (callee.type === 'Identifier' && callee.name === 'require')
@@ -139,11 +155,12 @@ const importPath = () => ({
             if (firstArg.value) {
               const importName = firstArg.value;
               const replaceValue = getReplacePath(
+                opts as BuiltInOptsType,
                 importName,
                 filename,
-                srcDir,
-                importStyle,
               );
+
+              // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
               const hashKey = filename + (importName || '');
               if (replaceValue) {
                 if (

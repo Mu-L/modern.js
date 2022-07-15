@@ -1,51 +1,64 @@
-import * as path from 'path';
-import {
-  createPlugin,
-  defineConfig,
-  usePlugins,
-  cli,
-  useAppContext,
-} from '@modern-js/core';
-import { lifecycle } from './lifecycle';
+import path from 'path';
+import { defineConfig, cli, CliPlugin } from '@modern-js/core';
+import AnalyzePlugin from '@modern-js/plugin-analyze';
+import LintPlugin from '@modern-js/plugin-jarvis';
+import { cleanRequireCache } from '@modern-js/utils';
+import { hooks } from './hooks';
 import { i18n, localeKeys } from './locale';
 import { getLocaleLanguage } from './utils/language';
-import { start } from './commands/start';
-import { dev } from './commands/dev';
+import type { DevOptions, BuildOptions, DeployOptions } from './utils/types';
 
 export { defineConfig };
 
-// eslint-disable-next-line react-hooks/rules-of-hooks
-usePlugins([
-  require.resolve('@modern-js/plugin-analyze/cli'),
-  require.resolve('@modern-js/plugin-fast-refresh/cli'),
-]);
+export default (): CliPlugin => ({
+  name: '@modern-js/app-tools',
 
-export default createPlugin(
-  (() => {
+  post: [
+    '@modern-js/plugin-analyze',
+    '@modern-js/plugin-ssr',
+    '@modern-js/plugin-state',
+    '@modern-js/plugin-router',
+    '@modern-js/plugin-polyfill',
+  ],
+
+  registerHook: hooks,
+
+  usePlugins: [AnalyzePlugin(), LintPlugin()],
+
+  setup: api => {
     const locale = getLocaleLanguage();
     i18n.changeLanguage({ locale });
 
-    lifecycle();
-
     return {
-      commands({ program }: any) {
+      commands({ program }) {
         program
           .command('dev')
           .usage('[options]')
           .description(i18n.t(localeKeys.command.dev.describe))
-          .option('-c --config <config>', i18n.t(localeKeys.command.dev.config))
-          .action(async () => {
-            await dev();
+          .option(
+            '-c --config <config>',
+            i18n.t(localeKeys.command.shared.config),
+          )
+          .option('-e --entry [entry...]', i18n.t(localeKeys.command.dev.entry))
+          .option('--analyze', i18n.t(localeKeys.command.shared.analyze))
+          .option('--api-only', i18n.t(localeKeys.command.dev.apiOnly))
+          .action(async (options: DevOptions) => {
+            const { dev } = await import('./commands/dev');
+            await dev(api, options);
           });
 
         program
           .command('build')
           .usage('[options]')
           .description(i18n.t(localeKeys.command.build.describe))
-          .option('--analyze', i18n.t(localeKeys.command.build.analyze))
-          .action(async (options: any) => {
+          .option(
+            '-c --config <config>',
+            i18n.t(localeKeys.command.shared.config),
+          )
+          .option('--analyze', i18n.t(localeKeys.command.shared.analyze))
+          .action(async (options: BuildOptions) => {
             const { build } = await import('./commands/build');
-            await build(options);
+            await build(api, options);
             // force exit after build.
             // eslint-disable-next-line no-process-exit
             process.exit(0);
@@ -55,19 +68,25 @@ export default createPlugin(
           .command('start')
           .usage('[options]')
           .description(i18n.t(localeKeys.command.start.describe))
+          .option('--api-only', i18n.t(localeKeys.command.dev.apiOnly))
           .action(async () => {
-            await start();
+            const { start } = await import('./commands/start');
+            await start(api);
           });
 
         program
           .command('deploy')
           .usage('[options]')
+          .option(
+            '-c --config <config>',
+            i18n.t(localeKeys.command.shared.config),
+          )
           .description(i18n.t(localeKeys.command.deploy.describe))
-          .action(async (options: any) => {
+          .action(async (options: DeployOptions) => {
             const { build } = await import('./commands/build');
-            await build();
+            await build(api);
             const { deploy } = await import('./commands/deploy');
-            await deploy(options);
+            await deploy(api, options);
             // eslint-disable-next-line no-process-exit
             process.exit(0);
           });
@@ -87,32 +106,47 @@ export default createPlugin(
             const { MWANewAction } = await import('@modern-js/new-action');
             await MWANewAction({ ...options, locale });
           });
+
+        program
+          .command('inspect')
+          .description('inspect internal webpack config')
+          .option(
+            `--env <env>`,
+            i18n.t(localeKeys.command.inspect.env),
+            'development',
+          )
+          .option(
+            '--output <output>',
+            i18n.t(localeKeys.command.inspect.output),
+            '/',
+          )
+          .option('--no-console', i18n.t(localeKeys.command.inspect.noConsole))
+          .option('--verbose', i18n.t(localeKeys.command.inspect.verbose))
+          .action(async options => {
+            const { inspect } = await import('./commands/inspect');
+            inspect(api, options);
+          });
       },
 
       // 这里会被 core/initWatcher 监听的文件变动触发，如果是 src 目录下的文件变动，则不做 restart
       async fileChange(e: { filename: string; eventType: string }) {
         const { filename, eventType } = e;
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        const appContext = useAppContext();
+        const appContext = api.useAppContext();
         const { appDirectory, srcDirectory } = appContext;
         const absolutePath = path.resolve(appDirectory, filename);
         if (
           !absolutePath.includes(srcDirectory) &&
           (eventType === 'change' || eventType === 'unlink')
         ) {
+          const { closeServer } = await import('./utils/createServer');
+          await closeServer();
           await cli.restart();
         }
       },
+
+      async beforeRestart() {
+        cleanRequireCache([require.resolve('@modern-js/plugin-analyze/cli')]);
+      },
     };
-  }) as any,
-  {
-    post: [
-      '@modern-js/plugin-analyze',
-      '@modern-js/plugin-fast-refresh',
-      '@modern-js/plugin-ssr',
-      '@modern-js/plugin-state',
-      '@modern-js/plugin-router',
-      '@modern-js/plugin-polyfill',
-    ],
   },
-);
+});

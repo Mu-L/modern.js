@@ -1,8 +1,10 @@
-import { createBabelChain, BabelChain } from '@modern-js/babel-chain';
-import { getBaseBabelChain } from '@modern-js/babel-preset-base';
+import {
+  getBaseBabelChain,
+  createBabelChain,
+  BabelChain,
+} from '@modern-js/babel-preset-base';
 import { isTest, isDev, isProd } from '@modern-js/utils';
 import { isBeyondReact17 } from './utils';
-// import { isPnpm } from './utils';
 import type { Options, EnvOptions } from './type';
 
 const prepareEnvOptions = (options: Options): EnvOptions => {
@@ -37,7 +39,7 @@ export const genCommon = (options: Options): BabelChain => {
     appDirectory,
     useLegacyDecorators,
     modules,
-    styledCompontents,
+    styledComponents,
     useTsLoader,
   } = options;
 
@@ -83,13 +85,14 @@ export const genCommon = (options: Options): BabelChain => {
         // We should turn this on once the lowest version of Node LTS
         // supports ES Modules.
         useESModules: !modules,
+        helpers: target === 'client' && !isTest(),
       },
       transformReactRemovePropTypes: isProd()
         ? {
             // 内部默认 removeImport: true,
           }
         : false,
-      styledCompontentsOptions: styledCompontents,
+      styledComponentsOptions: styledComponents,
     },
     syntax: 'es5',
     useLegacyDecorators,
@@ -101,21 +104,9 @@ export const genCommon = (options: Options): BabelChain => {
       { metaName },
     ]);
 
-  // TODO depened on pnpm @modern-cli/dev-utils/monorepo
-  // if (isPnpm(appDirectory)) {
-  //   chain.plugin(require.resolve('./built-in/babel-plugin-pnpm-adapter'));
-  // }
-
   chain
     .plugin('./built-in/babel-plugin-ssr-loader-id')
     .use(require.resolve('./built-in/babel-plugin-ssr-loader-id'));
-
-  // 该插件 base config里没有，保持不变
-  // NOTE: This plugin is included in @babel/preset-env, in ES2020
-  // https://babeljs.io/docs/en/babel-plugin-syntax-dynamic-import#docsNav
-  chain
-    .plugin('@babel/plugin-syntax-dynamic-import')
-    .use(require.resolve('@babel/plugin-syntax-dynamic-import'));
 
   return chain.merge(baseConfigChain);
 };

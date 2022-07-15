@@ -1,5 +1,5 @@
 import type { NormalizedConfig } from '@modern-js/core';
-import { applyOptionsChain, getBrowserslist } from '@modern-js/utils';
+import { applyOptionsChain, getBrowserslist, isProd } from '@modern-js/utils';
 import type { ProcessOptions, AcceptedPlugin } from 'postcss';
 import { shouldUseSourceMap } from './util';
 
@@ -12,24 +12,34 @@ export const getPostcssConfig = (
   appDirectory: string,
   config: NormalizedConfig,
   autoprefixer = true,
-): ProcessOptions & {
-  postcssOptions: {
-    plugins?: AcceptedPlugin[];
+) => {
+  const extraPlugins: AcceptedPlugin[] = [];
+
+  const utils = {
+    addPlugins(plugins: AcceptedPlugin | AcceptedPlugin[]) {
+      if (Array.isArray(plugins)) {
+        extraPlugins.push(...plugins);
+      } else {
+        extraPlugins.push(plugins);
+      }
+    },
   };
-} =>
-  applyOptionsChain(
+
+  const enableCssMinify = config.output?.disableCssExtract && isProd();
+
+  const mergedConfig = applyOptionsChain(
     {
       postcssOptions: {
         plugins: [
-          require('postcss-flexbugs-fixes'),
-          require('postcss-custom-properties'),
-          require('postcss-initial'),
-          require('postcss-page-break'),
-          require('postcss-font-variant'),
-          require('postcss-media-minmax'),
-          require('postcss-nesting'),
+          require('../compiled/postcss-flexbugs-fixes'),
+          require('../compiled/postcss-custom-properties'),
+          require('../compiled/postcss-initial'),
+          require('../compiled/postcss-page-break'),
+          require('../compiled/postcss-font-variant'),
+          require('../compiled/postcss-media-minmax'),
+          require('../compiled/postcss-nesting'),
           autoprefixer
-            ? require('autoprefixer')(
+            ? require('../compiled/autoprefixer')(
                 applyOptionsChain(
                   {
                     flexbox: 'no-2009',
@@ -39,9 +49,22 @@ export const getPostcssConfig = (
                 ),
               )
             : false,
+          enableCssMinify ? require('cssnano')({ preset: 'default' }) : false,
         ].filter(Boolean),
       },
       sourceMap: shouldUseSourceMap(config),
     },
-    config.tools?.postcss,
-  ) as any;
+    config.tools?.postcss || {},
+    utils,
+  );
+
+  if (extraPlugins.length) {
+    mergedConfig.postcssOptions!.plugins!.push(...extraPlugins);
+  }
+
+  return mergedConfig as ProcessOptions & {
+    postcssOptions: {
+      plugins?: AcceptedPlugin[];
+    };
+  };
+};

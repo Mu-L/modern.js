@@ -1,5 +1,52 @@
 # @modern-js/bff-runtime
 
+## 1.3.0
+
+### Minor Changes
+
+- 77a8e9e: feat: support bff operators
+
+### Patch Changes
+
+- @modern-js/server-utils@1.2.11
+
+## 1.2.5
+
+### Patch Changes
+
+- 4d5ca46d4: chore: remove farrow-http from dependencies
+  - @modern-js/server-utils@1.2.11
+
+## 1.2.4
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+- Updated dependencies [a1198d509]
+  - @modern-js/server-utils@1.2.10
+
+## 1.2.3
+
+### Patch Changes
+
+- d32f35134: chore: add modern/jest/eslint/ts config files to .npmignore
+- Updated dependencies [d32f35134]
+- Updated dependencies [1a30be07b]
+  - @modern-js/server-utils@1.2.6
+
+## 1.2.2
+
+### Patch Changes
+
+- 6cffe99d: chore:
+  remove react eslint rules for `modern-js` rule set.
+  add .eslintrc for each package to speed up linting
+- 60f7d8bf: feat: add tests dir to npmignore
+- Updated dependencies [6cffe99d]
+- Updated dependencies [04ae5262]
+- Updated dependencies [60f7d8bf]
+  - @modern-js/server-utils@1.2.3
+
 ## 1.2.1
 
 ### Patch Changes

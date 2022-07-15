@@ -11,7 +11,6 @@ import {
   Language,
   BooleanConfig,
   ClientRoute,
-  PackageManager,
   RunWay,
   EntryGenerator,
   ElectronGenerator,
@@ -38,7 +37,6 @@ const getGeneratorPath = (generator: string, distTag: string) => {
   return generator;
 };
 
-// eslint-disable-next-line max-statements
 export const handleTemplateFile = async (
   context: GeneratorContext,
   generator: GeneratorCore,
@@ -70,7 +68,6 @@ export const handleTemplateFile = async (
     await generatorPlugin.installPlugins(Solution.MWA, extra);
     schema = generatorPlugin.getInputSchema(Solution.MWA);
     inputValue = generatorPlugin.getInputValue();
-    // eslint-disable-next-line require-atomic-updates
     context.config.gitCommitMessage =
       generatorPlugin.getGitMessage() || context.config.gitCommitMessage;
   }
@@ -159,15 +156,13 @@ export const handleTemplateFile = async (
           .replace('templates/ts-template/', projectPath)
           .replace('.handlebars', ''),
     );
-  }
-
-  if (!isMonorepoSubProject && packageManager === PackageManager.Pnpm) {
+  } else {
     await appApi.forgeTemplate(
-      'templates/pnpm-template/**/*',
+      'templates/js-template/**/*',
       undefined,
       resourceKey =>
         resourceKey
-          .replace('templates/pnpm-template/', projectPath)
+          .replace('templates/js-template/', projectPath)
           .replace('.handlebars', ''),
     );
   }
@@ -242,11 +237,10 @@ export const handleTemplateFile = async (
   return { projectPath, isElectron: runWay === RunWay.Electron };
 };
 
-// eslint-disable-next-line max-statements
 export default async (context: GeneratorContext, generator: GeneratorCore) => {
   const appApi = new AppAPI(context, generator);
 
-  const { locale } = context.config;
+  const { locale, successInfo } = context.config;
   commonI18n.changeLanguage({ locale });
   utilsI18n.changeLanguage({ locale });
   appApi.i18n.changeLanguage({ locale });
@@ -292,19 +286,23 @@ export default async (context: GeneratorContext, generator: GeneratorCore) => {
     process.exit(1);
   }
 
-  if (isElectron) {
+  const { packageManager } = context.config;
+
+  if (successInfo) {
+    appApi.showSuccessInfo(successInfo);
+  } else if (isElectron) {
     appApi.showSuccessInfo(
       `${i18n.t(localeKeys.success, {
-        packageManager: getPackageManagerText(context.config.packageManager),
+        packageManager: getPackageManagerText(packageManager),
       })}
       ${i18n.t(localeKeys.electron.success, {
-        packageManager: getPackageManagerText(context.config.packageManager),
+        packageManager: getPackageManagerText(packageManager),
       })}`,
     );
   } else {
     appApi.showSuccessInfo(
       i18n.t(localeKeys.success, {
-        packageManager: getPackageManagerText(context.config.packageManager),
+        packageManager: getPackageManagerText(packageManager),
       }),
     );
   }

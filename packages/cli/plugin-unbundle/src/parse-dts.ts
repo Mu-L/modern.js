@@ -1,12 +1,12 @@
 import fs from 'fs';
-import merge from 'lodash.merge';
+import { merge } from '@modern-js/utils/lodash';
 import ts from 'typescript';
 
 let enumsMap = {};
 
 const createEnumObject = (enumNode: ts.EnumDeclaration, namespace?: string) => {
   let obj: Record<string, unknown> = {};
-  const finnal = obj;
+  const final = obj;
   if (namespace) {
     namespace.split('.').forEach(s => {
       // eslint-disable-next-line no-multi-assign
@@ -28,7 +28,7 @@ const createEnumObject = (enumNode: ts.EnumDeclaration, namespace?: string) => {
             m.initializer?.text;
     });
 
-  enumsMap = merge(enumsMap, finnal);
+  enumsMap = merge(enumsMap, final);
 };
 
 const visit = (node: ts.Node) => {
@@ -81,13 +81,14 @@ const visit = (node: ts.Node) => {
  */
 export const parseDTS = (files: string[]): Record<string, unknown> => {
   for (const filepath of files) {
-    const source = ts.createSourceFile(
-      filepath,
-      fs.readFileSync(filepath, 'utf8'),
-      ts.ScriptTarget.ES2015,
-    );
-
-    visit(source);
+    if (fs.existsSync(filepath)) {
+      const source = ts.createSourceFile(
+        filepath,
+        fs.readFileSync(filepath, 'utf8'),
+        ts.ScriptTarget.ES2015,
+      );
+      visit(source);
+    }
   }
 
   return enumsMap;

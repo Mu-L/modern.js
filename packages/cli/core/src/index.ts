@@ -1,126 +1,59 @@
 import path from 'path';
 import {
-  compatRequire,
   pkgUp,
+  program,
   ensureAbsolutePath,
   logger,
   INTERNAL_PLUGINS,
+  DEFAULT_SERVER_CONFIG,
 } from '@modern-js/utils';
-import {
-  createAsyncManager,
-  createAsyncWorkflow,
-  createParallelWorkflow,
-  ParallelWorkflow,
-  AsyncWorkflow,
-  Progresses2Runners,
-  createAsyncWaterfall,
-  AsyncWaterfall,
-} from '@modern-js/plugin';
-import { enable } from '@modern-js/plugin/node';
-
-import type { Hooks } from '@modern-js/types';
-import { program, Command } from './utils/commander';
-import { resolveConfig, loadUserConfig } from './config';
-import { loadPlugins } from './loadPlugins';
+import type { ErrorObject } from '../compiled/ajv';
+import { initCommandsMap } from './utils/commander';
+import { resolveConfig, loadUserConfig, addServerConfigToDeps } from './config';
+import { loadPlugins, TransformPlugin } from './loadPlugins';
 import {
   AppContext,
   ConfigContext,
+  useAppContext,
   IAppContext,
   initAppContext,
   ResolvedConfigContext,
-  useAppContext,
-  useConfigContext,
-  useResolvedConfigContext,
 } from './context';
 import { initWatcher } from './initWatcher';
-import { NormalizedConfig } from './config/mergeConfig';
 import { loadEnv } from './loadEnv';
+import { manager, HooksRunner } from './manager';
 
-export type { Hooks };
 export * from './config';
+export type {
+  Hooks,
+  ImportSpecifier,
+  ImportStatement,
+  RuntimePlugin,
+} from './types';
 export * from '@modern-js/plugin';
-export * from '@modern-js/plugin/node';
 
-program
-  .name('modern')
-  .usage('<command> [options]')
-  .version(process.env.MODERN_JS_VERSION || '0.1.0');
-
-export type HooksRunner = Progresses2Runners<{
-  config: ParallelWorkflow<void>;
-  resolvedConfig: AsyncWaterfall<{
-    resolved: NormalizedConfig;
-  }>;
-  validateSchema: ParallelWorkflow<void>;
-  prepare: AsyncWorkflow<void, void>;
-  commands: AsyncWorkflow<
-    {
-      program: Command;
-    },
-    void
-  >;
-  watchFiles: ParallelWorkflow<void>;
-  fileChange: AsyncWorkflow<
-    {
-      filename: string;
-      eventType: 'add' | 'change' | 'unlink';
-    },
-    void
-  >;
-  beforeExit: AsyncWorkflow<void, void>;
-}>;
-
-const hooksMap = {
-  config: createParallelWorkflow(),
-  resolvedConfig: createAsyncWaterfall<{
-    resolved: NormalizedConfig;
-  }>(),
-  validateSchema: createParallelWorkflow(),
-  // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-  prepare: createAsyncWorkflow<void, void>(),
-  commands: createAsyncWorkflow<
-    {
-      program: Command;
-    },
-    // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-    void
-  >(),
-  watchFiles: createParallelWorkflow(),
-  fileChange: createAsyncWorkflow<
-    {
-      filename: string;
-      eventType: 'add' | 'change' | 'unlink';
-    },
-    // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-    void
-  >(),
-  // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-  beforeExit: createAsyncWorkflow<void, void>(),
-};
-
-export const manager = createAsyncManager<Hooks, typeof hooksMap>(hooksMap);
-
-export const {
+// TODO: remove export after refactor all plugins
+export {
+  manager,
+  mountHook,
+  usePlugins,
   createPlugin,
-  registe: registerHook,
-  useRunner: mountHook,
-} = manager;
+  registerHook,
+} from './manager';
+export type { CliHooks, CliPlugin, CliHookCallbacks } from './manager';
 
-export const usePlugins = (plugins: string[]) =>
-  plugins.forEach(plugin =>
-    manager.usePlugin(compatRequire(require.resolve(plugin))),
-  );
-
+// TODO: remove export after refactor all plugins
 export {
   AppContext,
+  ConfigContext,
   ResolvedConfigContext,
   useAppContext,
   useConfigContext,
   useResolvedConfigContext,
-  ConfigContext,
-};
+} from './pluginAPI';
+export type { PluginAPI } from './pluginAPI';
 
-export type { NormalizedConfig, IAppContext };
+export type { IAppContext };
 
 const initAppDir = async (cwd?: string): Promise<string> => {
   if (!cwd) {
@@ -137,64 +70,87 @@ const initAppDir = async (cwd?: string): Promise<string> => {
 };
 
 export interface CoreOptions {
+  version?: string;
   configFile?: string;
+  serverConfigFile?: string;
   packageJsonConfig?: string;
   plugins?: typeof INTERNAL_PLUGINS;
-  beforeUsePlugins?: (
-    plugins: any,
-    config: any,
-  ) => { cli: any; cliPath: any; server: any; serverPath: any }[];
+  transformPlugin?: TransformPlugin;
+  onSchemaError?: (error: ErrorObject) => void;
   options?: {
+    metaName?: string;
     srcDir?: string;
     distDir?: string;
     sharedDir?: string;
-    internalDir?: string;
   };
 }
+
+export const mergeOptions = (options?: CoreOptions) => {
+  const defaultOptions = {
+    serverConfigFile: DEFAULT_SERVER_CONFIG,
+  };
+
+  return {
+    ...defaultOptions,
+    ...options,
+  };
+};
+
+const setProgramVersion = (version = 'unknown') => {
+  program.name('modern').usage('<command> [options]').version(version);
+};
 
 const createCli = () => {
   let hooksRunner: HooksRunner;
   let isRestart = false;
   let restartWithExistingPort = 0;
+  let restartOptions: CoreOptions | undefined;
 
   const init = async (argv: string[] = [], options?: CoreOptions) => {
-    enable();
-
     manager.clear();
+
+    const mergedOptions = mergeOptions(options);
+
+    restartOptions = mergedOptions;
 
     const appDirectory = await initAppDir();
 
-    loadEnv(appDirectory);
+    initCommandsMap();
+    setProgramVersion(options?.version);
+
+    const metaName = mergedOptions?.options?.metaName ?? 'MODERN';
+    loadEnv(appDirectory, process.env[`${metaName.toUpperCase()}_ENV`]);
 
     const loaded = await loadUserConfig(
       appDirectory,
-      options?.configFile,
-      options?.packageJsonConfig,
+      mergedOptions?.configFile,
+      mergedOptions?.packageJsonConfig,
     );
 
-    let plugins = loadPlugins(
-      appDirectory,
-      loaded.config.plugins || [],
-      options?.plugins,
-    );
-
-    if (options?.beforeUsePlugins) {
-      plugins = options.beforeUsePlugins(plugins, loaded.config);
-    }
+    const plugins = loadPlugins(appDirectory, loaded.config, {
+      internalPlugins: mergedOptions?.plugins,
+      transformPlugin: mergedOptions?.transformPlugin,
+    });
 
     plugins.forEach(plugin => plugin.cli && manager.usePlugin(plugin.cli));
 
-    const appContext = initAppContext(
+    const appContext = initAppContext({
       appDirectory,
       plugins,
-      loaded.filePath,
-      options?.options,
+      configFile: loaded.filePath,
+      options: mergedOptions?.options,
+      serverConfigFile: mergedOptions?.serverConfigFile,
+    });
+
+    // 将 server.config 加入到 loaded.dependencies，以便对文件监听做热更新
+    addServerConfigToDeps(
+      loaded.dependencies,
+      appDirectory,
+      mergedOptions.serverConfigFile,
     );
 
-    manager.run(() => {
-      ConfigContext.set(loaded.config);
-      AppContext.set(appContext);
-    });
+    ConfigContext.set(loaded.config);
+    AppContext.set(appContext);
 
     hooksRunner = await manager.init();
 
@@ -219,10 +175,11 @@ const createCli = () => {
 
     const config = await resolveConfig(
       loaded,
-      extraConfigs as any,
-      extraSchemas as any,
+      extraConfigs,
+      extraSchemas,
       restartWithExistingPort,
       argv,
+      options?.onSchemaError,
     );
 
     const { resolved } = await hooksRunner.resolvedConfig({
@@ -230,19 +187,22 @@ const createCli = () => {
     });
 
     // update context value
-    manager.run(() => {
-      ConfigContext.set(loaded.config);
-      ResolvedConfigContext.set(resolved);
-      AppContext.set({
-        ...appContext,
-        port: resolved.server.port!,
-        distDirectory: ensureAbsolutePath(appDirectory, resolved.output.path!),
-      });
+    ConfigContext.set(loaded.config);
+    ResolvedConfigContext.set(resolved);
+    AppContext.set({
+      ...appContext,
+      port: resolved.server.port!,
+      distDirectory: ensureAbsolutePath(appDirectory, resolved.output.path!),
     });
 
     await hooksRunner.prepare();
 
-    return { loadedConfig: loaded, appContext, resolved };
+    return {
+      loadedConfig: loaded,
+      // appContext may be updated in `prepare` hook, should return latest value
+      appContext: useAppContext(),
+      resolved,
+    };
   };
 
   async function run(argv: string[], options?: CoreOptions) {
@@ -257,7 +217,7 @@ const createCli = () => {
       hooksRunner,
       argv,
     );
-    manager.run(() => program.parse(process.argv));
+    program.parse(process.argv);
   }
 
   async function restart() {
@@ -267,14 +227,18 @@ const createCli = () => {
     logger.info('Restart...\n');
 
     let hasGetError = false;
+
+    const runner = manager.useRunner();
+    await runner.beforeRestart();
+
     try {
-      await init(process.argv.slice(2));
+      await init(process.argv.slice(2), restartOptions);
     } catch (err) {
       console.error(err);
       hasGetError = true;
     } finally {
       if (!hasGetError) {
-        manager.run(() => program.parse(process.argv));
+        program.parse(process.argv);
       }
     }
   }
@@ -289,3 +253,9 @@ const createCli = () => {
 export const cli = createCli();
 
 export { initAppDir, initAppContext };
+
+declare module '@modern-js/utils/compiled/commander' {
+  export interface Command {
+    commandsMap: Map<string, Command>;
+  }
+}

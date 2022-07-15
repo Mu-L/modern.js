@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 import * as path from 'path';
 import { FileSystem, JsonFile } from '@rushstack/node-core-library';
 import { WORKSPACE_FILE } from '../constants';
@@ -112,7 +111,7 @@ export const getMonorepoBaseData = (root: string = process.cwd()) => {
   const rootPath = findMonorepoRoot(root);
   if (!rootPath) {
     throw new Error(
-      'not find any monorepo, you can add lerna、pnpm or yarn worksapce file',
+      'not find any monorepo, you can add lerna、pnpm or yarn workspace file',
     );
   }
   return {
@@ -120,5 +119,3 @@ export const getMonorepoBaseData = (root: string = process.cwd()) => {
     packageManager: getPackageManager(rootPath),
   };
 };
-
-/* eslint-enable react-hooks/rules-of-hooks */

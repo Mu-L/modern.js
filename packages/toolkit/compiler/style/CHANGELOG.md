@@ -1,5 +1,111 @@
 # @modern-js/style-compiler
 
+## 1.2.14
+
+### Patch Changes
+
+- only bump version
+
+## 1.2.13
+
+- nothing happen, only bump
+
+## 1.2.12
+
+### Patch Changes
+
+- nothing happen, only bump
+- Updated dependencies
+  - @modern-js/utils@1.7.11
+
+## 1.2.11
+
+### Patch Changes
+
+- b82869d: expor BuildWatchEmitter type
+- Updated dependencies [b82869d]
+  - @modern-js/utils@1.7.10
+
+## 1.2.10
+
+### Patch Changes
+
+- 9377d2d9d: feat: support addPlugins util in tools.postcss
+- Updated dependencies [9377d2d9d]
+- Updated dependencies [8c9ad1749]
+  - @modern-js/utils@1.7.7
+
+## 1.2.9
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+
+## 1.2.8
+
+### Patch Changes
+
+- eedece8b8: relativeUrls set true
+
+## 1.2.7
+
+### Patch Changes
+
+- 598aa4324: change less option. rootpath set `.`.
+
+## 1.2.6
+
+### Patch Changes
+
+- d32f35134: chore: add modern/jest/eslint/ts config files to .npmignore
+- Updated dependencies [d32f35134]
+- Updated dependencies [6ae4a34ae]
+- Updated dependencies [b80229c79]
+- Updated dependencies [948cc4436]
+  - @modern-js/utils@1.7.3
+
+## 1.2.5
+
+### Patch Changes
+
+- 69a728375: fix: remove exports.jsnext:source after publish
+- Updated dependencies [cd7346b0d]
+- Updated dependencies [69a728375]
+  - @modern-js/utils@1.7.2
+
+## 1.2.4
+
+### Patch Changes
+
+- 6cffe99d: chore:
+  remove react eslint rules for `modern-js` rule set.
+  add .eslintrc for each package to speed up linting
+- 04ae5262: chore: bump @modern-js/utils to v1.4.1 in dependencies
+- 60f7d8bf: feat: add tests dir to npmignore
+- Updated dependencies [b8599d09]
+- Updated dependencies [60f7d8bf]
+- Updated dependencies [3bf4f8b0]
+  - @modern-js/utils@1.5.0
+
+## 1.2.3
+
+### Patch Changes
+
+- 17d0cc46: feat: prebundle lodash to @modern-js/utils/lodash
+- Updated dependencies [77ff9754]
+- Updated dependencies [d2d1d6b2]
+- Updated dependencies [07a4887e]
+- Updated dependencies [ea2ae711]
+- Updated dependencies [17d0cc46]
+- Updated dependencies [d2d1d6b2]
+  - @modern-js/utils@1.4.0
+
+## 1.2.2
+
+### Patch Changes
+
+- 118da5b4: fix: fix tailwindcss sourcemap building error
+
 ## 1.2.1
 
 ### Patch Changes

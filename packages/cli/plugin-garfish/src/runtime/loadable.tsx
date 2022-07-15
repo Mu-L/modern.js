@@ -1,20 +1,21 @@
 // logical reference to https://github.com/jamiebuilds/react-loadable/blob/6201c5837b212d6244c57f3748f2b1375096beeb/src/index.js
 import React from 'react';
+import { RouteComponentProps } from '@modern-js/plugin-router';
 import { logger } from '../util';
-import { LoadingComponent, MicroComponentProps } from './useModuleApps';
+import { LoadableConfig, MicroComponentProps } from './useModuleApps';
 
 interface SetLoadingState {
   isLoading?: boolean;
   error?: unknown;
 }
 
-export interface MicroProps {
+export interface MicroProps extends RouteComponentProps {
   setLoadingState: (state: { isLoading?: boolean; error?: unknown }) => void;
   [key: string]: any;
 }
 
 export function Loadable(WrapComponent: any) {
-  return function (defaultLoadingComponent?: LoadingComponent) {
+  return function (defaultLoadable?: LoadableConfig) {
     return class LoadableComponent extends React.Component<
       MicroComponentProps,
       any
@@ -24,13 +25,7 @@ export function Loadable(WrapComponent: any) {
         pastDelay: boolean;
         timedOut: boolean;
         isLoading: boolean;
-        delay: number;
-        timeout: number;
-        LoadingComponent?: LoadingComponent;
       } = {
-        LoadingComponent: defaultLoadingComponent,
-        timeout: 10000,
-        delay: 200,
         error: null,
         pastDelay: false,
         timedOut: false,
@@ -46,14 +41,15 @@ export function Loadable(WrapComponent: any) {
       // eslint-disable-next-line @typescript-eslint/naming-convention
       UNSAFE_componentWillMount() {
         this.mounted = true;
-        const { loadingConfig } = this.props;
-        if (loadingConfig?.LoadingComponent) {
-          this.setStateWithMountCheck({
-            LoadingComponent: loadingConfig.LoadingComponent,
-          });
-        }
+        const {
+          loadable = defaultLoadable || {
+            delay: 200,
+            timeout: 10000,
+            loading: null,
+          },
+        } = this.props;
 
-        const { delay, timeout } = this.state;
+        const { delay, timeout } = loadable;
         if (typeof delay === 'number') {
           if (delay === 0) {
             this.setState({ pastDelay: true });
@@ -84,8 +80,6 @@ export function Loadable(WrapComponent: any) {
         if (!this.mounted) {
           return;
         }
-
-        logger('Loadable state', this.state);
         this.setState(newState);
       }
 
@@ -101,14 +95,28 @@ export function Loadable(WrapComponent: any) {
       }
 
       render() {
-        // eslint-disable-next-line @typescript-eslint/no-shadow
-        const { isLoading, error, pastDelay, timedOut, LoadingComponent } =
-          this.state;
-        const showLoading = (isLoading || error) && LoadingComponent;
+        const { isLoading, error, pastDelay, timedOut } = this.state;
+        const {
+          loadable = defaultLoadable || {
+            delay: 200,
+            timeout: 10000,
+            loading: null,
+          },
+          ...otherProps
+        } = this.props;
+        const { loading: LoadingComponent } = loadable;
 
+        logger('Loadable render state', {
+          state: this.state,
+          props: otherProps,
+          loadable,
+          defaultLoadable,
+        });
+
+        const showLoading = (isLoading || error) && LoadingComponent;
         return (
           <>
-            {showLoading && LoadingComponent && (
+            {showLoading && (
               <LoadingComponent
                 isLoading={isLoading}
                 pastDelay={pastDelay}
@@ -119,10 +127,14 @@ export function Loadable(WrapComponent: any) {
             )}
             <WrapComponent
               style={{ display: showLoading ? 'none' : 'block' }}
-              setLoadingState={(props: SetLoadingState) =>
-                this.setStateWithMountCheck(props)
-              }
-              {...this.props}
+              setLoadingState={(props: SetLoadingState) => {
+                // loading is not provided and there is a rendering exception
+                if (props.error && !LoadingComponent) {
+                  throw props.error;
+                }
+                this.setStateWithMountCheck(props);
+              }}
+              {...otherProps}
             />
           </>
         );

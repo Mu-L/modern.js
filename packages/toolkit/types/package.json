@@ -11,12 +11,8 @@
     "modern",
     "modern.js"
   ],
-  "version": "1.2.1",
+  "version": "1.6.0",
   "types": "./index.d.ts",
-  "dependencies": {
-    "@modern-js/plugin": "workspace:^1.2.1",
-    "webpack": "^5.54.0"
-  },
   "exports": {
     ".": "./index.d.ts",
     "./server": {
@@ -25,13 +21,13 @@
     }
   },
   "devDependencies": {
-    "@types/jest": "^26",
+    "@scripts/build": "workspace:*",
+    "@scripts/jest-config": "workspace:*",
+    "@types/jest": "^27",
     "@types/node": "^14",
     "@types/react": "^17",
     "@types/react-dom": "^17",
-    "@scripts/build": "workspace:*",
-    "jest": "^27",
-    "@scripts/jest-config": "workspace:*"
+    "jest": "^27"
   },
   "sideEffects": false,
   "publishConfig": {
@@ -41,6 +37,19 @@
     "types": "./index.d.ts"
   },
   "scripts": {
-    "test": "jest --passWithNoTests"
+    "test": "wireit",
+    "prepublishOnly": "only-allow-pnpm"
+  },
+  "wireit": {
+    "test": {
+      "command": "jest --passWithNoTests",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json",
+        "tests/**/*"
+      ],
+      "output": []
+    }
   }
 }

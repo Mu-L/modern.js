@@ -1,53 +1,49 @@
 /* eslint-disable max-lines */
 import path from 'path';
-import Chain from 'webpack-chain';
 import {
+  chalk,
   isProd,
   isDev,
-  isProdProfile,
+  signale,
+  CHAIN_ID,
+  isString,
   isTypescript,
   ensureAbsolutePath,
-  isString,
   applyOptionsChain,
   removeLeadingSlash,
 } from '@modern-js/utils';
-import TerserPlugin from 'terser-webpack-plugin';
-import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
-import webpack, { IgnorePlugin } from 'webpack';
-import CaseSensitivePathsPlugin from 'case-sensitive-paths-webpack-plugin';
-import MiniCssExtractPlugin from 'mini-css-extract-plugin';
-import { IAppContext, NormalizedConfig } from '@modern-js/core';
-import { merge } from 'webpack-merge';
-import WebpackBar from 'webpackbar';
-import { createBabelChain, BabelChain } from '@modern-js/babel-chain';
-import {
-  CSS_REGEX,
-  JS_REGEX,
-  TS_REGEX,
-  SVG_REGEX,
-  ASSETS_REGEX,
-  CSS_MODULE_REGEX,
-  GLOBAL_CSS_REGEX,
-  JS_RESOLVE_EXTENSIONS,
-  CACHE_DIRECTORY,
-} from '../utils/constants';
-import { createCSSRule } from '../utils/createCSSRule';
-import { mergeRegex } from '../utils/mergeRegex';
+import webpack from 'webpack';
+import type { IAppContext, NormalizedConfig } from '@modern-js/core';
+import WebpackChain from '@modern-js/utils/webpack-chain';
+import type { Options as BabelPrestAppOptions } from '@modern-js/babel-preset-app';
+import { merge as webpackMerge } from '../../compiled/webpack-merge';
+import { JS_RESOLVE_EXTENSIONS } from '../utils/constants';
+import { enableCssExtract } from '../utils/createCSSRule';
 import { getWebpackLogging } from '../utils/getWebpackLogging';
-import { getBabelOptions } from '../utils/getBabelOptions';
-import { ModuleScopePlugin } from '../plugins/module-scope-plugin';
-import { getSourceIncludes } from '../utils/getSourceIncludes';
-import { TsConfigPathsPlugin } from '../plugins/ts-config-paths-plugin';
-import { getWebpackAliases } from '../utils/getWebpackAliases';
+import { ChainUtils, getWebpackUtils } from './shared';
+import { applyTsLoader, applyTsCheckerPlugin } from './features/ts';
+import { applyBabelLoader } from './features/babel';
+import { applyModuleScopePlugin } from './features/module-scope';
+import { applyMinimizer } from './features/minimizer';
+import { applySvgrLoader } from './features/svgr';
+import { applyAlias, applyTsConfigPathsPlugins } from './features/alias';
+import { applyAssetsLoader } from './features/assets';
+import { applyCSSExtractPlugin, applyCSSLoaders } from './features/css';
+import { applyYamlLoader } from './features/yaml';
+import { applyTomlLoader } from './features/toml';
+import { applyMarkdownLoader } from './features/markdown';
+import { applyFallbackLoader } from './features/fallback';
+import { applyProgressPlugin } from './features/progress';
+import { applyIgnorePlugin } from './features/ignore';
+import { applyFileSystemCache } from './features/cache';
+import { applyDefinePlugin } from './features/define';
 
 export type ResolveAlias = { [index: string]: string };
 
 class BaseWebpackConfig {
-  chain: Chain;
+  chain: WebpackChain;
 
   appContext: IAppContext;
-
-  metaName: string;
 
   options: NormalizedConfig;
 
@@ -57,70 +53,69 @@ class BaseWebpackConfig {
 
   jsFilename: string;
 
-  jsChunkname: string;
+  jsChunkName: string;
 
-  cssChunkname: string;
+  cssChunkName: string;
 
-  mediaChunkname: string;
+  mediaChunkName: string;
 
-  babelChain: BabelChain;
+  isTsProject: boolean;
+
+  chainUtils: ChainUtils;
+
+  babelPresetAppOptions?: Partial<BabelPrestAppOptions>;
 
   constructor(appContext: IAppContext, options: NormalizedConfig) {
-    this.appContext = appContext;
-
-    this.appDirectory = this.appContext.appDirectory;
-
-    this.metaName = this.appContext.metaName;
-
     this.options = options;
+    this.appContext = appContext;
+    this.appDirectory = this.appContext.appDirectory;
+    this.chain = new WebpackChain();
 
-    this.chain = new Chain();
+    const { output = {} } = this.options;
+    const { disableAssetsCache } = output;
+    const jsPath = (output.jsPath || '').trim();
+    const cssPath = (output.cssPath || '').trim();
+    const mediaPath = (output.mediaPath || '').trim();
 
-    this.dist = ensureAbsolutePath(
-      this.appDirectory,
-      this.options.output ? this.options.output.path! : '',
-    );
+    this.dist = ensureAbsolutePath(this.appDirectory, output.path || '');
 
     this.jsFilename = removeLeadingSlash(
-      `${(this.options.output
-        ? this.options.output.jsPath!
-        : ''
-      ).trim()}/[name]${
-        isProd() && !this.options.output?.disableAssetsCache
-          ? '.[contenthash:8]'
-          : ''
+      `${jsPath}/[name]${
+        isProd() && !disableAssetsCache ? '.[contenthash:8]' : ''
       }.js`,
     );
 
-    this.jsChunkname = removeLeadingSlash(
-      `${(this.options.output ? this.options.output.jsPath! : '').trim()}/[id]${
-        isProd() && !this.options.output.disableAssetsCache
-          ? '.[contenthash:8]'
-          : ''
+    this.jsChunkName = removeLeadingSlash(
+      `${jsPath}/[name]${
+        isProd() && !disableAssetsCache ? '.[contenthash:8]' : ''
       }.js`,
     );
 
-    this.cssChunkname = removeLeadingSlash(
-      `${(this.options.output
-        ? this.options.output.cssPath!
-        : ''
-      ).trim()}/[name]${
-        isProd() && !this.options.output?.disableAssetsCache
-          ? '.[contenthash:8]'
-          : ''
+    this.cssChunkName = removeLeadingSlash(
+      `${cssPath.trim()}/[name]${
+        isProd() && !disableAssetsCache ? '.[contenthash:8]' : ''
       }.css`,
     );
 
-    this.mediaChunkname = removeLeadingSlash(
-      `${this.options.output ? this.options.output.mediaPath! : ''}/[name]${
-        this.options.output?.disableAssetsCache ? '' : '.[hash:8]'
-      }[ext]`,
+    this.mediaChunkName = removeLeadingSlash(
+      `${mediaPath}/[name]${disableAssetsCache ? '' : '.[hash:8]'}[ext]`,
     );
 
-    this.babelChain = createBabelChain();
+    this.isTsProject = isTypescript(this.appDirectory);
+
+    this.chainUtils = {
+      chain: this.chain,
+      config: this.options,
+      loaders: this.chain.module.rule(CHAIN_ID.RULE.LOADERS),
+      appContext: this.appContext,
+    };
   }
 
   name() {
+    // empty
+  }
+
+  target() {
     // empty
   }
 
@@ -144,9 +139,12 @@ class BaseWebpackConfig {
   }
 
   entry() {
-    const { entrypoints = [] } = this.appContext;
+    const { entrypoints = [], checkedEntries } = this.appContext;
 
     for (const { entryName, entry } of entrypoints) {
+      if (checkedEntries && !checkedEntries.includes(entryName)) {
+        continue;
+      }
       this.chain.entry(entryName).add(entry);
     }
   }
@@ -155,7 +153,7 @@ class BaseWebpackConfig {
     this.chain.output
       .hashFunction('xxhash64')
       .filename(this.jsFilename)
-      .chunkFilename(this.jsChunkname)
+      .chunkFilename(this.jsChunkName)
       .globalObject('window')
       .path(this.dist)
       .pathinfo(!isProd())
@@ -177,7 +175,7 @@ class BaseWebpackConfig {
       .publicPath(this.publicPath());
 
     this.chain.output.merge({
-      assetModuleFilename: this.mediaChunkname,
+      assetModuleFilename: this.mediaChunkName,
       environment: {
         arrowFunction: false,
         bigIntLiteral: false,
@@ -191,20 +189,21 @@ class BaseWebpackConfig {
   }
 
   publicPath() {
-    let publicPath =
-      /* eslint-disable no-nested-ternary */
-      isProd()
-        ? this.options.output
-          ? this.options.output.assetPrefix!
-          : ''
-        : isString(this.options.dev?.assetPrefix)
-        ? this.options.dev.assetPrefix
-        : (this.options.dev ? this.options.dev.assetPrefix : '')
-        ? `//${this.appContext.ip || 'localhost'}:${
-            this.appContext.port || '8080'
-          }/`
-        : '/';
-    /* eslint-enable no-nested-ternary */
+    const { dev, output } = this.options;
+
+    let publicPath = '/';
+
+    if (isProd()) {
+      if (output?.assetPrefix) {
+        publicPath = output.assetPrefix;
+      }
+    } else if (isString(dev?.assetPrefix)) {
+      publicPath = dev.assetPrefix;
+    } else if (dev?.assetPrefix === true) {
+      const ip = this.appContext.ip || 'localhost';
+      const port = this.appContext.port || '8080';
+      publicPath = `//${ip}:${port}/`;
+    }
 
     if (!publicPath.endsWith('/')) {
       publicPath += '/';
@@ -213,413 +212,110 @@ class BaseWebpackConfig {
     return publicPath;
   }
 
-  /* eslint-disable max-statements */
   loaders() {
     this.chain.module
-      .rule('mjs')
+      .rule(CHAIN_ID.RULE.MJS)
       .test(/\.m?js/)
       .resolve.set('fullySpecified', false);
 
-    const loaders = this.chain.module.rule('loaders');
-
-    //  js、ts
+    const loaders = this.chain.module.rule(CHAIN_ID.RULE.LOADERS);
     const useTsLoader = Boolean(this.options.output?.enableTsLoader);
 
-    loaders
-      .oneOf('js')
-      .test(useTsLoader ? JS_REGEX : mergeRegex(JS_REGEX, TS_REGEX))
-      .include.add(this.appContext.srcDirectory)
-      .add(this.appContext.internalDirectory)
-      .end()
-      .use('babel')
-      .loader(require.resolve('babel-loader'))
-      .options(
-        getBabelOptions(
-          this.metaName,
-          this.appDirectory,
-          this.options,
-          this.chain.get('name'),
-          this.babelChain,
-        ),
-      );
+    applyBabelLoader({
+      ...this.chainUtils,
+      useTsLoader,
+      babelPresetAppOptions: this.babelPresetAppOptions,
+    });
 
     if (useTsLoader) {
-      loaders
-        .oneOf('ts')
-        .test(TS_REGEX)
-        .include.add(this.appContext.srcDirectory)
-        .add(this.appContext.internalDirectory)
-        .end()
-        .use('babel')
-        .loader(require.resolve('babel-loader'))
-        .options({
-          presets: [
-            [
-              require.resolve('@modern-js/babel-preset-app'),
-              {
-                metaName: this.metaName,
-                appDirectory: this.appDirectory,
-                target: 'client',
-                useTsLoader: true,
-                useBuiltIns:
-                  this.options.output.polyfill === 'ua'
-                    ? false
-                    : this.options.output.polyfill,
-              },
-            ],
-          ],
-        })
-        .end()
-        .use('ts')
-        .loader(require.resolve('ts-loader'))
-        .options(
-          applyOptionsChain(
-            {
-              compilerOptions: {
-                target: 'es5',
-                module: 'ESNext',
-              },
-              transpileOnly: false,
-              allowTsInNodeModules: true,
-            },
-            this.options.tools?.tsLoader,
-          ),
-        );
+      applyTsLoader(this.chainUtils);
     }
 
-    const includes = getSourceIncludes(this.appDirectory, this.options);
-
-    if (includes.length > 0) {
-      const includeRegex = mergeRegex(...includes);
-      const testResource = (resource: string) => includeRegex.test(resource);
-      loaders.oneOf('js').include.add(testResource);
-      loaders.oneOfs.has('ts') && loaders.oneOf('ts').include.add(testResource);
-    }
-
-    const disableCssModuleExtension =
-      this.options.output?.disableCssModuleExtension ?? false;
-    // css
-    createCSSRule(
-      this.chain,
-      {
-        appDirectory: this.appDirectory,
-        config: this.options,
-      },
-      {
-        name: 'css',
-        // when disableCssModuleExtension is true,
-        // only transfer *.global.css in css-loader
-        test: disableCssModuleExtension ? GLOBAL_CSS_REGEX : CSS_REGEX,
-        exclude: [CSS_MODULE_REGEX],
-      },
-      {
-        importLoaders: 1,
-        esModule: false,
-        sourceMap: isProd() && !this.options.output?.disableSourceMap,
-      },
-    );
-
-    // css modules
-    createCSSRule(
-      this.chain,
-      {
-        appDirectory: this.appDirectory,
-        config: this.options,
-      },
-      {
-        name: 'css-modules',
-        test: disableCssModuleExtension ? CSS_REGEX : CSS_MODULE_REGEX,
-        exclude: disableCssModuleExtension
-          ? [/node_modules/, GLOBAL_CSS_REGEX]
-          : [],
-        genTSD: this.options.output?.enableCssModuleTSDeclaration,
-      },
-      {
-        importLoaders: 1,
-        esModule: false,
-        modules: {
-          localIdentName: this.options.output
-            ? this.options.output.cssModuleLocalIdentName!
-            : '',
-          exportLocalsConvention: 'camelCase',
-        },
-        sourceMap: isProd() && !this.options.output?.disableSourceMap,
-      },
-    );
-
-    // svg
-    loaders
-      .oneOf('svg-inline')
-      .test(SVG_REGEX)
-      .type('javascript/auto')
-      .resourceQuery(/inline/)
-      .use('svgr')
-      .loader(require.resolve('@svgr/webpack'))
-      .options({ svgo: false })
-      .end()
-      .use('url')
-      .loader(require.resolve('url-loader'))
-      .options({
-        limit: Infinity,
-        name: this.mediaChunkname.replace(/\[ext\]$/, '.[ext]'),
-      });
-
-    loaders
-      .oneOf('svg-url')
-      .test(SVG_REGEX)
-      .type('javascript/auto')
-      .resourceQuery(/url/)
-      .use('svgr')
-      .loader(require.resolve('@svgr/webpack'))
-      .options({ svgo: false })
-      .end()
-      .use('url')
-      .loader(require.resolve('url-loader'))
-      .options({
-        limit: false,
-        name: this.mediaChunkname.replace(/\[ext\]$/, '.[ext]'),
-      });
-
-    loaders
-      .oneOf('svg')
-      .test(SVG_REGEX)
-      .type('javascript/auto')
-      .use('svgr')
-      .loader(require.resolve('@svgr/webpack'))
-      .options({ svgo: false })
-      .end()
-      .use('url')
-      .loader(require.resolve('url-loader'))
-      .options({
-        limit: this.options.output?.dataUriLimit,
-        name: this.mediaChunkname.replace(/\[ext\]$/, '.[ext]'),
-      });
-
-    // img, font assets
-    loaders
-      .oneOf('assets-inline')
-      .test(ASSETS_REGEX)
-      .type('asset/inline' as any)
-      .resourceQuery(/inline/);
-
-    loaders
-      .oneOf('assets-url')
-      .test(ASSETS_REGEX)
-      .type('asset/resource' as any)
-      .resourceQuery(/url/);
-
-    loaders
-      .oneOf('assets')
-      .test(ASSETS_REGEX)
-      .type('asset' as any)
-      .parser({
-        dataUrlCondition: { maxSize: this.options.output?.dataUriLimit },
-      });
-
-    // yml,toml, markdown
-    loaders
-      .oneOf('yml')
-      .test(/\.ya?ml$/)
-      .use('json')
-      .loader(require.resolve('json-loader'))
-      .end()
-      .use('yaml')
-      .loader('yaml-loader');
-
-    loaders
-      .oneOf('toml')
-      .test(/\.toml$/)
-      .use('toml')
-      .loader(require.resolve('toml-loader'));
-
-    loaders
-      .oneOf('markdown')
-      .test(/\.md$/)
-      .use('html')
-      .loader(require.resolve('html-loader'))
-      .end()
-      .use('markdown')
-      .loader('markdown-loader');
-
-    //  resource fallback
-    loaders
-      .oneOf('fallback')
-      .exclude.add(/^$/)
-      .add(JS_REGEX)
-      .add(TS_REGEX)
-      .add(CSS_REGEX)
-      .add(CSS_MODULE_REGEX)
-      .add(/\.(html?|json|wasm|ya?ml|toml|md)$/)
-      .end()
-      .use('file')
-      .loader(require.resolve('file-loader'));
+    applyCSSLoaders(this.chainUtils);
+    applySvgrLoader({
+      ...this.chainUtils,
+      mediaChunkName: this.mediaChunkName,
+    });
+    applyAssetsLoader(this.chainUtils);
+    applyYamlLoader(this.chainUtils);
+    applyTomlLoader(this.chainUtils);
+    applyMarkdownLoader(this.chainUtils);
+    applyFallbackLoader(this.chainUtils);
 
     return loaders;
   }
 
-  /* eslint-enable max-statements */
-
   plugins() {
-    // progress bar
-    process.stdout.isTTY &&
-      this.chain
-        .plugin('progress')
-        .use(WebpackBar, [{ name: this.chain.get('name') }]);
+    applyProgressPlugin(this.chainUtils);
+    applyDefinePlugin(this.chainUtils);
+    applyIgnorePlugin(this.chainUtils);
 
-    isDev() &&
-      this.chain.plugin('case-sensitive').use(CaseSensitivePathsPlugin);
+    if (enableCssExtract(this.options)) {
+      applyCSSExtractPlugin({
+        ...this.chainUtils,
+        cssChunkName: this.cssChunkName,
+      });
+    }
 
-    this.chain.plugin('mini-css-extract').use(MiniCssExtractPlugin, [
-      {
-        filename: this.cssChunkname,
-        chunkFilename: this.cssChunkname,
-        ignoreOrder: true,
-      },
-    ]);
-
-    this.chain.plugin('ignore').use(IgnorePlugin, [
-      {
-        resourceRegExp: /^\.\/locale$/,
-        contextRegExp: /moment$/,
-      },
-    ]);
+    const { output } = this.options;
+    // only enable ts-checker plugin in ts project
+    // no need to use ts-checker plugin when using ts-loader
+    if (
+      this.isTsProject &&
+      !output.enableTsLoader &&
+      !output.disableTsChecker
+    ) {
+      applyTsCheckerPlugin(this.chainUtils);
+    }
   }
 
-  /* eslint-disable  max-statements */
   resolve() {
     // resolve extensions
     const extensions = JS_RESOLVE_EXTENSIONS.filter(
-      ext => isTypescript(this.appContext.appDirectory) || !ext.includes('ts'),
+      ext => this.isTsProject || !ext.includes('ts'),
     );
 
     for (const ext of extensions) {
       this.chain.resolve.extensions.add(ext);
     }
 
-    //  resolve alias
-    const defaultAlias: ResolveAlias = getWebpackAliases(
-      this.appContext,
-      this.options._raw,
-    );
-
-    const alias = applyOptionsChain<ResolveAlias, undefined>(
-      defaultAlias,
-      this.options.source?.alias as ResolveAlias,
-    );
-
-    for (const name of Object.keys(alias)) {
-      this.chain.resolve.alias.set(
-        name,
-        (
-          (Array.isArray(alias[name]) ? alias[name] : [alias[name]]) as string[]
-        ).map(a => ensureAbsolutePath(this.appDirectory, a)) as any,
-      );
-    }
+    applyAlias(this.chainUtils);
 
     //  resolve modules
     this.chain.resolve.modules
       .add('node_modules')
       .add(this.appContext.nodeModulesDirectory);
 
-    let defaultScopes: any[] = ['./src', /node_modules/, './shared'];
-
-    const scopeOptions = this.options.source?.moduleScopes;
-
-    if (Array.isArray(scopeOptions)) {
-      if (scopeOptions.some(s => typeof s === 'function')) {
-        for (const scope of scopeOptions) {
-          if (typeof scope === 'function') {
-            const ret = scope(defaultScopes);
-            defaultScopes = ret ? ret : defaultScopes;
-          } else {
-            defaultScopes.push(scope);
-          }
-        }
-      } else {
-        defaultScopes.push(...scopeOptions);
-      }
+    // only apply module scope plugin when user config contains moduleScopes
+    if (this.options._raw?.source?.moduleScopes) {
+      applyModuleScopePlugin(this.chainUtils);
     }
 
-    // resolve plugin(module scope)
-    this.chain.resolve.plugin('module-scope').use(ModuleScopePlugin, [
-      {
-        appSrc: defaultScopes.map((scope: string | RegExp) => {
-          if (isString(scope)) {
-            return ensureAbsolutePath(this.appDirectory, scope);
-          }
-          return scope;
-        }),
-        allowedFiles: [path.resolve(this.appDirectory, './package.json')],
-      },
-    ]);
-
-    if (isTypescript(this.appDirectory)) {
-      // aliases from tsconfig.json
-      this.chain.resolve
-        .plugin('ts-config-paths')
-        .use(TsConfigPathsPlugin, [this.appDirectory]);
+    if (this.isTsProject) {
+      applyTsConfigPathsPlugins(this.chainUtils);
     }
   }
 
-  /* eslint-enable  max-statements */
-
   cache() {
-    this.chain.cache({
-      type: 'filesystem',
-      cacheDirectory: path.resolve(
-        this.appDirectory,
-        CACHE_DIRECTORY,
-        'webpack',
-      ),
-      buildDependencies: {
-        defaultWebpack: [require.resolve('webpack/lib')],
-        config: [__filename, this.appContext.configFile].filter(Boolean),
-        tsconfig: [
-          isTypescript(this.appDirectory) &&
-            path.resolve(this.appDirectory, './tsconfig.json'),
-        ].filter(Boolean),
-      },
+    applyFileSystemCache({
+      ...this.chainUtils,
+      isTsProject: this.isTsProject,
     });
   }
 
   optimization() {
+    const minimize = isProd() && !this.options.output?.disableMinimize;
+
     this.chain.optimization
-      .minimize(isProd() && !this.options.output?.disableMinimize)
+      .minimize(minimize)
       .splitChunks({ chunks: 'all' })
-      .runtimeChunk({ name: (entrypoint: any) => `runtime-${entrypoint.name}` })
-      .minimizer('js')
-      .use(TerserPlugin, [
-        applyOptionsChain(
-          {
-            terserOptions: {
-              parse: { ecma: 8 },
-              compress: {
-                ecma: 5,
-                warnings: false,
+      .runtimeChunk({
+        name: (entrypoint: any) => `runtime-${entrypoint.name}`,
+      });
 
-                comparisons: false,
-
-                inline: 2,
-              },
-              mangle: { safari10: true },
-              // Added for profiling in devtools
-              keep_classnames: isProdProfile(),
-              keep_fnames: isProdProfile(),
-              output: {
-                ecma: 5,
-                ascii_only: true,
-              },
-            },
-          },
-          this.options.tools?.terser,
-        ),
-      ] as any)
-      .end()
-      .minimizer('css')
-      // FIXME: add `<any>` reason: Since the css-minimizer-webpack-plugin has been updated
-      .use<any>(CssMinimizerPlugin, [
-        applyOptionsChain({}, this.options.tools?.minifyCss),
-      ]);
+    if (minimize) {
+      applyMinimizer(this.chainUtils);
+    }
   }
 
   stats() {
@@ -628,19 +324,88 @@ class BaseWebpackConfig {
   }
 
   config() {
-    const chainConfig = this.getChain().toConfig();
+    const chain = this.getChain();
+    const chainConfig = chain.toConfig();
+
+    let finalConfig = chainConfig;
+
+    if (this.options.tools?.webpack) {
+      let isChainUsed = false;
+
+      const proxiedChain = new Proxy(chain, {
+        get(target, property) {
+          isChainUsed = true;
+          return (target as any)[property];
+        },
+      });
+
+      const mergedConfig = applyOptionsChain(
+        chainConfig,
+        this.options.tools?.webpack,
+        {
+          chain: proxiedChain,
+          env: process.env.NODE_ENV!,
+          name: chain.get('name'),
+          webpack,
+          ...getWebpackUtils(chainConfig),
+        },
+        webpackMerge,
+      );
+
+      // Compatible with the legacy `chain` usage, if `chain` is called in `tools.webpack`,
+      // using the chained config as finalConfig, otherwise using the merged webpack config.
+      if (isChainUsed) {
+        finalConfig = chain.toConfig();
+
+        if (isDev()) {
+          signale.warn(
+            `The ${chalk.cyan('chain')} param of ${chalk.cyan(
+              'tools.webpack',
+            )} is deprecated, please use ${chalk.cyan(
+              'tools.webpackChain',
+            )} instead.`,
+          );
+        }
+      } else {
+        finalConfig = mergedConfig;
+      }
+    }
+
+    // TODO remove webpackFinal
     if ((this.options.tools as any)?.webpackFinal) {
       return applyOptionsChain(
-        chainConfig as any,
+        finalConfig,
         (this.options.tools as any)?.webpackFinal,
         {
-          name: this.chain.get('name'),
+          name: chain.get('name'),
           webpack,
         },
-        merge,
+        webpackMerge,
       );
     }
-    return chainConfig;
+
+    return finalConfig;
+  }
+
+  applyToolsWebpackChain() {
+    if (!this.options.tools) {
+      return;
+    }
+
+    const { webpackChain } = this.options.tools;
+    if (webpackChain) {
+      const toArray = <T>(item: T | T[]): T[] =>
+        Array.isArray(item) ? item : [item];
+
+      toArray(webpackChain).forEach(item => {
+        item(this.chain, {
+          env: process.env.NODE_ENV!,
+          name: this.chain.get('name'),
+          webpack,
+          CHAIN_ID,
+        });
+      });
+    }
   }
 
   getChain() {
@@ -650,40 +415,18 @@ class BaseWebpackConfig {
     this.chain.node.set('global', true);
 
     this.name();
+    this.target();
     this.mode();
     this.devtool();
     this.entry();
     this.output();
-    const loaders = this.loaders();
+    this.loaders();
     this.plugins();
     this.resolve();
     this.cache();
     this.optimization();
     this.stats();
-
-    loaders
-      .oneOf('js')
-      .use('babel')
-      .options(
-        applyOptionsChain(
-          loaders.oneOf('js').use('babel').get('options'),
-          this.options.tools?.babel,
-          { chain: this.babelChain },
-        ),
-      );
-
-    const config = this.chain.toConfig();
-
-    applyOptionsChain(
-      config as any,
-      this.options.tools?.webpack,
-      {
-        chain: this.chain,
-        name: this.chain.get('name'),
-        webpack,
-      },
-      merge,
-    );
+    this.applyToolsWebpackChain();
 
     return this.chain;
   }

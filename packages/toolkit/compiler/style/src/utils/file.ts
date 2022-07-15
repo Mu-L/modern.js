@@ -1,11 +1,11 @@
 import path from 'path';
-import glob from 'glob';
+import { glob } from '@modern-js/utils';
 
 // get style file's real path
 const getRealFiles = (files: string[] = [], stylesDir = process.cwd()) =>
   files.map(file => path.join(stylesDir, file));
 
-// get all extensiton glob string
+// get all extension glob string
 const getExtString = (extensions: string[]) => `{${extensions.join(',')}}`;
 
 // delete same file

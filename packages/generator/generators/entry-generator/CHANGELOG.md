@@ -1,5 +1,77 @@
 # @modern-js/entry-generator
 
+## 1.4.7
+
+### Patch Changes
+
+- 74e74ee: feat: update codesmith json api version
+
+  feat: 升级 `@modern-js/codesmith-api-json` 版本
+
+## 1.4.6
+
+### Patch Changes
+
+- 8e38b78: Encoding error introduced in Chinese
+- 341bb42: feat: bump codesmith package version
+
+## 1.4.5
+
+### Patch Changes
+
+- dfa8ef62e: fix: create entry not move .eslintrc.js file
+
+## 1.4.4
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+- c7e38b4e6: feat: upgrade codesmith pkg version
+
+## 1.4.3
+
+### Patch Changes
+
+- 8bf0dcc04: fix: entry template style conflict with tailwindcss
+
+## 1.4.2
+
+### Patch Changes
+
+- 6b0bb5e3b: feat: bump codesmith version
+
+## 1.4.1
+
+### Patch Changes
+
+- 895fa0ff: chore: using "workspace:\*" in devDependencies
+
+## 1.4.0
+
+### Minor Changes
+
+- 2b12032c: feat: upgrade csmith tools
+
+### Patch Changes
+
+- 6cffe99d: chore:
+  remove react eslint rules for `modern-js` rule set.
+  add .eslintrc for each package to speed up linting
+- 04ae5262: chore: bump @modern-js/utils to v1.4.1 in dependencies
+
+## 1.3.3
+
+### Patch Changes
+
+- 17d0cc46: feat: prebundle lodash to @modern-js/utils/lodash
+
+## 1.3.2
+
+### Patch Changes
+
+- 9e0aed14: fix: mwa pages index lint error
+- 6668a1bf: feat: upgrade @modern-js/codesmith-api-app version
+
 ## 1.3.1
 
 ### Patch Changes

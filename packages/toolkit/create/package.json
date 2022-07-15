@@ -11,14 +11,14 @@
     "modern",
     "modern.js"
   ],
-  "version": "1.3.1",
+  "version": "1.5.0",
   "jsnext:source": "./src/index.ts",
   "types": "./src/index.ts",
   "main": "./dist/js/node/node.js",
   "module": "./dist/js/treeshaking/index.js",
   "jsnext:modern": "./dist/js/modern/index.js",
   "bin": {
-    "create": "./bin/run"
+    "create": "./bin/run.js"
   },
   "files": [
     "/bin",
@@ -36,26 +36,25 @@
   },
   "scripts": {
     "prepare": "pnpm build && pnpm build:csmith",
+    "prepublishOnly": "only-allow-pnpm",
     "new": "modern new",
-    "build": "modern build",
-    "build:csmith": "csmith-tools build",
-    "test": "jest --passWithNoTests"
+    "build": "wireit",
+    "build:csmith": "wireit",
+    "test": "wireit"
   },
   "devDependencies": {
-    "@babel/runtime": "^7",
-    "@modern-js/codesmith": "^1.0.8",
-    "@modern-js/codesmith-tools": "^1.0.9",
+    "@babel/runtime": "^7.18.0",
+    "@modern-js/codesmith": "^1.3.0",
+    "@modern-js/codesmith-tools": "^1.2.1",
     "@scripts/build": "workspace:*",
-    "@modern-js/i18n-cli-language-detector": "workspace:^1.2.1",
-    "@modern-js/generator-plugin-plugin": "workspace:^1.1.1",
-    "@modern-js/plugin-i18n": "workspace:^1.2.1",
-    "@modern-js/repo-generator": "workspace:^1.3.1",
-    "@modern-js/utils": "workspace:^1.2.2",
-    "@types/jest": "^26",
+    "@modern-js/generator-plugin-plugin": "workspace:*",
+    "@modern-js/plugin-i18n": "workspace:*",
+    "@modern-js/repo-generator": "workspace:*",
+    "@modern-js/utils": "workspace:*",
+    "@types/jest": "^27",
     "@types/node": "^14",
     "@types/react": "^17",
     "@types/react-dom": "^17",
-    "commander": "^8.0.0",
     "ts-node": "^10.1.0",
     "typescript": "^4",
     "jest": "^27",
@@ -73,5 +72,40 @@
     "registry": "https://registry.npmjs.org/",
     "access": "public",
     "types": "./dist/types/index.d.ts"
+  },
+  "wireit": {
+    "build": {
+      "command": "modern build",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "output": [
+        "dist/**/*",
+        "!dist/node/main.js"
+      ]
+    },
+    "build:csmith": {
+      "command": "csmith-tools build",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "output": [
+        "dist/node/main.js"
+      ]
+    },
+    "test": {
+      "command": "jest --passWithNoTests",
+      "files": [
+        "src/**/*",
+        "tsconfig.json",
+        "package.json",
+        "tests/**/*"
+      ],
+      "output": []
+    }
   }
 }

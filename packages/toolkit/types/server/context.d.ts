@@ -52,15 +52,45 @@ export type BaseSSRServerContext = {
     query: Record<string, string>;
     headers: IncomingHttpHeaders;
     host: string;
-    cookie?: string;
+    cookieMap: Record<string, any>;
     [propsName: string]: any;
+  };
+  response: {
+    setHeader: (key: string, value: string) => void;
+    status: (code: number) => void;
   };
   redirection: { url?: string; status?: number };
   distDir: string;
   template: string;
   entryName: string;
-  logger: Logger;
-  metrics?: Metrics;
+  logger: {
+    error: (message: string, e: Error | string) => void;
+    debug: (message: string, ...args: any[]) => void;
+    info: (message: string, ...args: any[]) => void;
+  };
+  metrics: {
+    emitTimer: (
+      name: string,
+      cost: number,
+      tags: Record<string, unknown> = {},
+    ) => void;
+    emitCounter: (
+      name: string,
+      counter: number,
+      tags: Record<string, unknown> = {},
+    ) => void;
+  };
   loadableManifest?: string;
   cacheConfig?: any;
 };
+
+export interface ISAppContext {
+  appDirectory: string;
+  distDirectory: string;
+  sharedDirectory: string;
+  plugins: {
+    server?: any;
+    serverPkg?: any;
+  }[];
+  [key: string]: unknown;
+}

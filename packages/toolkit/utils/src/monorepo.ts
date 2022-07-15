@@ -1,21 +1,20 @@
 import fs from 'fs';
 import path from 'path';
-import glob from 'glob';
-import yaml from 'yaml';
+import { glob, yaml } from './compiled';
 
 const PACKAGE_MAX_DEPTH = 5;
 
-const WOKRSPACES_FILES = {
+const WORKSPACE_FILES = {
   YARN: 'package.json',
-  PNPM: 'pnpm-workspaces.yaml',
+  PNPM: 'pnpm-workspace.yaml',
   LERNA: 'lerna.json',
 };
 
 export const isLerna = (root: string) =>
-  fs.existsSync(path.join(root, WOKRSPACES_FILES.LERNA));
+  fs.existsSync(path.join(root, WORKSPACE_FILES.LERNA));
 
 export const isYarnWorkspaces = (root: string) => {
-  const pkg = path.join(root, WOKRSPACES_FILES.YARN);
+  const pkg = path.join(root, WORKSPACE_FILES.YARN);
 
   if (!fs.existsSync(pkg)) {
     return false;
@@ -27,15 +26,19 @@ export const isYarnWorkspaces = (root: string) => {
 };
 
 export const isPnpmWorkspaces = (root: string) =>
-  fs.existsSync(path.join(root, WOKRSPACES_FILES.PNPM));
+  fs.existsSync(path.join(root, WORKSPACE_FILES.PNPM));
 
 export const isMonorepo = (root: string) =>
   isLerna(root) || isYarnWorkspaces(root) || isPnpmWorkspaces(root);
 
 export const isModernjsMonorepo = (root: string) => {
-  const json = JSON.parse(
-    fs.readFileSync(path.join(root, 'package.json'), 'utf8'),
-  );
+  const pkgJsonPath = path.join(root, 'package.json');
+
+  if (!fs.existsSync(pkgJsonPath)) {
+    return false;
+  }
+
+  const json = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
 
   const deps = {
     ...(json.dependencies || {}),
@@ -79,9 +82,11 @@ export const getMonorepoPackages = (
     );
     ({ packages } = json);
   } else {
-    ({ packages } = yaml.parse(
-      fs.readFileSync(path.join(root, WOKRSPACES_FILES.PNPM), 'utf8'),
-    ));
+    ({ packages } = yaml.load(
+      fs.readFileSync(path.join(root, WORKSPACE_FILES.PNPM), 'utf8'),
+    ) as {
+      packages: string[];
+    });
   }
 
   if (packages) {
@@ -92,7 +97,7 @@ export const getMonorepoPackages = (
           ignore: ['**/node_modules/**'],
         }),
       )
-      .flat()
+      .reduce((acc, val) => acc.concat(val), [])
       .filter(filepath => fs.existsSync(path.resolve(filepath, 'package.json')))
       .map(filepath => ({
         path: filepath,

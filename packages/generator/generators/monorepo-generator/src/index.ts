@@ -1,15 +1,22 @@
 import path from 'path';
-import { GeneratorContext, GeneratorCore } from '@modern-js/codesmith';
+import {
+  canUsePnpm,
+  canUseYarn,
+  GeneratorContext,
+  GeneratorCore,
+} from '@modern-js/codesmith';
 import { AppAPI } from '@modern-js/codesmith-api-app';
 import { JsonAPI } from '@modern-js/codesmith-api-json';
 import {
-  i18n,
+  i18n as commonI18n,
   BaseGenerator,
   Solution,
   MonorepoSchema,
   PackageManager,
   ChangesetGenerator,
 } from '@modern-js/generator-common';
+import { getPackageManagerText } from '@modern-js/generator-utils';
+import { i18n, localeKeys } from './locale';
 
 const getGeneratorPath = (generator: string, distTag: string) => {
   if (process.env.CODESMITH_ENV === 'development') {
@@ -34,7 +41,6 @@ export const handleTemplateFile = async (
     await generatorPlugin.installPlugins(Solution.Monorepo, extra);
     schema = generatorPlugin.getInputSchema(Solution.Monorepo);
     inputValue = generatorPlugin.getInputValue();
-    // eslint-disable-next-line require-atomic-updates
     context.config.gitCommitMessage =
       generatorPlugin.getGitMessage() || context.config.gitCommitMessage;
   }
@@ -42,6 +48,7 @@ export const handleTemplateFile = async (
   const ans = await appApi.getInputBySchema(schema, {
     ...context.config,
     ...inputValue,
+    isMonorepo: true,
   });
 
   generator.logger.debug(`ans=`, ans);
@@ -109,11 +116,14 @@ export const handleTemplateFile = async (
 export default async (context: GeneratorContext, generator: GeneratorCore) => {
   const appApi = new AppAPI(context, generator);
 
-  const { locale } = context.config;
+  const { locale, successInfo } = context.config;
+  commonI18n.changeLanguage({ locale });
   i18n.changeLanguage({ locale });
   appApi.i18n.changeLanguage({ locale });
 
-  if (!(await appApi.checkEnvironment())) {
+  // monorepo 场景下必须使用 pnpm 或者 yarn
+  if (!(await canUsePnpm()) && !(await canUseYarn())) {
+    generator.logger.warn(i18n.t(localeKeys.environment.yarn_pnpm));
     // eslint-disable-next-line no-process-exit
     process.exit(1);
   }
@@ -145,7 +155,12 @@ export default async (context: GeneratorContext, generator: GeneratorCore) => {
     process.exit(1);
   }
 
-  appApi.showSuccessInfo();
+  appApi.showSuccessInfo(
+    successInfo ||
+      i18n.t(localeKeys.success, {
+        packageManager: getPackageManagerText(context.config.packageManager),
+      }),
+  );
 
   generator.logger.debug(`forge @modern-js/monorepo-generator succeed `);
 };

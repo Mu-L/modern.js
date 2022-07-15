@@ -2,11 +2,9 @@ import {
   createAsyncPipeline,
   Middleware,
   MaybeAsync,
-  Container,
-  useContainer,
-} from 'farrow-pipeline';
+} from '../farrow-pipeline';
 
-const ASYNC_WATERFALL_SYMBOL = Symbol('ASYNC_WATERFALL_SYMBOL');
+const ASYNC_WATERFALL_SYMBOL = Symbol.for('MODERN_ASYNC_WATERFALL');
 
 export type AsyncBrook<I = unknown> = (I: I) => MaybeAsync<I>;
 export type AsyncBrookInput<I = unknown> =
@@ -21,12 +19,10 @@ export const getAsyncBrook = <I>(input: AsyncBrookInput<I>) => {
   } else if (input && typeof input.middleware === 'function') {
     return input.middleware;
   }
-  // eslint-disable-next-line @typescript-eslint/no-base-to-string,@typescript-eslint/restrict-template-expressions
   throw new Error(`${input} is not a AsyncBrook or { brook: AsyncBrook }`);
 };
 
 export type RunAsyncWaterfallOptions<I = unknown> = {
-  container?: Container;
   onLast?: AsyncBrook<I>;
 };
 
@@ -37,37 +33,6 @@ export type AsyncWaterfall<I> = {
   [ASYNC_WATERFALL_SYMBOL]: true;
 };
 
-export type AsyncWaterfall2AsyncBrook<P extends AsyncWaterfall<any>> =
-  P extends AsyncWaterfall<infer I> ? AsyncBrook<I> : never;
-
-export type AsyncWaterfallRecord = Record<string, AsyncWaterfall<any>>;
-
-// eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-export type AsyncWaterfalls2Brooks<PS extends AsyncWaterfallRecord | void> = {
-  [K in keyof PS]: PS[K] extends AsyncWaterfall<any>
-    ? AsyncWaterfall2AsyncBrook<PS[K]>
-    : // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-    PS[K] extends void
-    ? // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-      void
-    : never;
-};
-
-export type RunnerFromAsyncWaterfall<M extends AsyncWaterfall<any>> =
-  M extends AsyncWaterfall<infer VS> ? AsyncWaterfall<VS>['run'] : never;
-
-// eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-export type AsyncWaterfalls2Runners<PS extends AsyncWaterfallRecord | void> = {
-  [K in keyof PS]: PS[K] extends AsyncWaterfall<any>
-    ? RunnerFromAsyncWaterfall<PS[K]>
-    : // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-    PS[K] extends void
-    ? // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-      void
-    : never;
-};
-
-// eslint-disable-next-line @typescript-eslint/no-invalid-void-type
 export const createAsyncWaterfall = <I = void>(): AsyncWaterfall<I> => {
   const pipeline = createAsyncPipeline<I, I>();
 
@@ -79,14 +44,10 @@ export const createAsyncWaterfall = <I = void>(): AsyncWaterfall<I> => {
   };
 
   const run: AsyncWaterfall<I>['run'] = (input, options) =>
-    // eslint-disable-next-line @typescript-eslint/no-shadow
     pipeline.run(input, { ...options, onLast: input => input });
 
   const middleware: AsyncWaterfall<I>['middleware'] = input => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const container = useContainer();
-    // eslint-disable-next-line @typescript-eslint/no-shadow
-    return pipeline.run(input, { container, onLast: input => input });
+    return pipeline.run(input, { onLast: input => input });
   };
 
   const waterfall: AsyncWaterfall<I> = {

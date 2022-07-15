@@ -1,22 +1,7 @@
+import { manager } from '@modern-js/core';
 import { build } from '../../src/commands/build';
 
-const mockBeforeBuild = jest.fn();
-const mockAfterBuild = jest.fn();
 const mockGenerateRoutes = jest.fn();
-
-jest.mock('@modern-js/core', () => ({
-  __esModule: true,
-  mountHook() {
-    return {
-      beforeBuild: mockBeforeBuild,
-      afterBuild: mockAfterBuild,
-    };
-  },
-  useAppContext: jest.fn(() => ({
-    existSrc: false,
-  })),
-  useResolvedConfigContext: jest.fn(),
-}));
 
 jest.mock('../../src/utils/routes', () => ({
   __esModule: true,
@@ -28,10 +13,31 @@ describe('command build', () => {
     jest.resetAllMocks();
   });
 
-  test('existSrc is false', async () => {
-    await build();
-    expect(mockBeforeBuild).toBeCalled();
-    expect(mockGenerateRoutes).toBeCalled();
-    expect(mockAfterBuild).toBeCalled();
+  test('hooks should be invoke correctly', async () => {
+    const mockBeforeBuild = jest.fn();
+    const mockAfterBuild = jest.fn();
+    const mockAPI = {
+      useAppContext: jest.fn((): any => ({
+        apiOnly: true,
+        distDirectory: '',
+        appDirectory: '',
+      })),
+      useResolvedConfigContext: jest.fn(),
+      useHookRunners: (): any => ({
+        afterBuild: mockAfterBuild,
+        beforeBuild: mockBeforeBuild,
+      }),
+    };
+
+    const cloned = manager.clone(mockAPI);
+    cloned.usePlugin({
+      async setup(api) {
+        await build(api);
+        expect(mockBeforeBuild).toBeCalled();
+        expect(mockGenerateRoutes).toBeCalled();
+        expect(mockAfterBuild).toBeCalled();
+      },
+    });
+    await cloned.init();
   });
 });

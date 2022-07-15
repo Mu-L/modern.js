@@ -1,13 +1,9 @@
 // eslint-disable-next-line eslint-comments/disable-enable-pair
 /* eslint-disable max-lines */
-import * as asyncHooksImpl from 'farrow-pipeline/asyncHooks.node';
 import {
   createContext,
-  createContainer,
   createPipeline,
   createAsyncPipeline,
-  usePipeline,
-  useContainer,
   isPipeline,
 } from '../src';
 import { sleep } from './helpers';
@@ -144,32 +140,6 @@ describe('createPipeline', () => {
     expect(list).toEqual([0, 1, 3, 4, 7]);
   });
 
-  it('can inject context', async () => {
-    const TestContext = createContext(10);
-
-    const pipeline = createPipeline<number, PromiseLike<number> | number>({
-      contexts: { count: TestContext.create(100) },
-    });
-
-    pipeline.use(input => {
-      const Context = TestContext.use();
-      Context.value += input;
-      return Context.value;
-    });
-
-    const result0 = await pipeline.run(20);
-
-    expect(result0).toEqual(120);
-
-    const container = createContainer({ count: TestContext.create(10) });
-
-    const rseult1 = await pipeline.run(30, { container });
-
-    expect(rseult1).toEqual(40);
-
-    expect(container.read(TestContext)).toEqual(40);
-  });
-
   it('should throw error if there are no middlewares in pipeline', async () => {
     const pipeline = createPipeline<number, PromiseLike<number> | number>();
 
@@ -235,36 +205,6 @@ describe('createPipeline', () => {
 
     expect(result).toEqual(5);
     expect(list).toEqual([1, 2, 3, 4]);
-  });
-
-  it('can access current context in pipeline', () => {
-    const Context0 = createContext(0);
-    const Context1 = createContext(1);
-
-    const pipeline = createPipeline<number, number>({
-      contexts: {
-        count0: Context0.create(10),
-        count1: Context1.create(20),
-      },
-    });
-
-    const list: boolean[] = [];
-
-    pipeline.use(input => {
-      const container = useContainer();
-      const count0 = Context0.use().value;
-      const count1 = Context1.use().value;
-
-      list.push(container.read(Context0) === count0);
-      list.push(container.read(Context1) === count1);
-
-      return input;
-    });
-
-    const result = pipeline.run(0);
-
-    expect(result).toEqual(0);
-    expect(list).toEqual([true, true]);
   });
 
   it('should support multiple middlewares in pipeline.use', () => {
@@ -363,25 +303,6 @@ describe('createPipeline', () => {
     it('should throw error when add illegal middleware', () => {
       const pipeline = createPipeline<number, number>();
       expect(() => pipeline.use({} as any)).toThrowError();
-    });
-
-    it('can usePipeline in another pipeline', () => {
-      const pipeline0 = createPipeline<string, string>();
-      const pipeline1 = createPipeline<string, string>();
-
-      pipeline0.use(input => `${input} from pipeline0`);
-
-      pipeline1.use(input => {
-        const runPipeline1 = usePipeline(pipeline0);
-
-        const text = runPipeline1(' pipeline1');
-
-        return input + text;
-      });
-
-      const result = pipeline1.run('run');
-
-      expect(result).toEqual(`run pipeline1 from pipeline0`);
     });
 
     it('isPipeline', () => {
@@ -507,10 +428,8 @@ describe('createPipeline', () => {
         return input + step.value;
       });
 
-      asyncHooksImpl.enable();
       const result0 = await pipeline1.run(0);
       const result1 = await pipeline0.run(0);
-      asyncHooksImpl.disable();
 
       expect(result0).toEqual(1);
       expect(result1).toEqual(3);
@@ -522,25 +441,6 @@ describe('createPipeline', () => {
       expect(() => pipeline.use({} as any)).toThrowError();
     });
 
-    it('can useAsyncPipeline in another pipeline', async () => {
-      const pipeline0 = createAsyncPipeline<string, string>();
-      const pipeline1 = createAsyncPipeline<string, string>();
-
-      pipeline0.use(async input => `${input} from pipeline0`);
-
-      pipeline1.use(async input => {
-        const runPipeline1 = usePipeline(pipeline0);
-
-        const text = await runPipeline1(' pipeline1');
-
-        return input + text;
-      });
-
-      const result = await pipeline1.run('run');
-
-      expect(result).toEqual(`run pipeline1 from pipeline0`);
-    });
-
     it('support hooks', async () => {
       const pipeline = createAsyncPipeline<number, number>();
 
@@ -548,7 +448,7 @@ describe('createPipeline', () => {
 
       const incre = async () => {
         await sleep(0);
-        Count.set({ count: Count.assert().count + 1 });
+        Count.set({ count: Count.get().count + 1 });
       };
 
       const list = [] as { count: number }[];
@@ -573,13 +473,7 @@ describe('createPipeline', () => {
         return input + Count.get().count;
       });
 
-      const container = createContainer({ count: Count });
-
-      asyncHooksImpl.enable();
-
-      const result0 = await pipeline.run(10, { container });
-
-      asyncHooksImpl.disable();
+      const result0 = await pipeline.run(10);
 
       expect(result0).toEqual(21);
       expect(list).toEqual([{ count: 10 }, { count: 12 }]);
@@ -588,7 +482,6 @@ describe('createPipeline', () => {
     it('should throw error when all middlewares calling next() and onLast is not exist', async () => {
       const pipeline = createAsyncPipeline<number, number>();
 
-      // eslint-disable-next-line promise/prefer-await-to-then
       pipeline.use((input, next) => Promise.resolve().then(() => next(input)));
 
       await expect(() => pipeline.run(0)).rejects.toThrowError();

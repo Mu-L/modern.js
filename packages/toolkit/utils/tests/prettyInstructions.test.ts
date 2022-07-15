@@ -57,16 +57,16 @@ jest.mock('os', () => {
   };
 });
 
-jest.mock('chalk', () => ({
-  __esModule: true,
-  default: {
+jest.mock('../compiled/chalk', () => {
+  return {
+    blue: jest.fn(str => str),
     bold: jest.fn(str => str),
     green: jest.fn(str => str),
     red: jest.fn(str => str),
     yellow: jest.fn(str => str),
     cyanBright: jest.fn(str => str),
-  },
-}));
+  };
+});
 
 describe('prettyInstructions', () => {
   test('basic usage', () => {
@@ -97,7 +97,7 @@ describe('prettyInstructions', () => {
         },
       ],
       port: 8080,
-      existSrc: true,
+      apiOnly: false,
     };
     const mockConfig = {
       dev: {
@@ -123,7 +123,7 @@ describe('prettyInstructions', () => {
         },
       ],
       port: 8080,
-      existSrc: false,
+      apiOnly: true,
     };
 
     const mockConfig = {

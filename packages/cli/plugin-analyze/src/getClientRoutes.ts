@@ -5,8 +5,8 @@ import {
   findExists,
   normalizeToPosixPath,
 } from '@modern-js/utils';
-import { makeLegalIdentifier } from '@rollup/pluginutils';
 import type { Entrypoint, Route } from '@modern-js/types';
+import { makeLegalIdentifier } from './makeLegalIdentifier';
 import {
   FILE_SYSTEM_ROUTES_COMPONENTS_DIR,
   FILE_SYSTEM_ROUTES_DYNAMIC_REGEXP,
@@ -55,9 +55,22 @@ const shouldSkip = (file: string): boolean => {
 const replaceWithAlias = (base: string, filePath: string, alias: string) =>
   normalizeToPosixPath(path.join(alias, path.relative(base, filePath)));
 
+const compName = (srcDirectory: string, filePath: string) => {
+  const legalCompName = makeLegalIdentifier(
+    path.relative(srcDirectory, filePath),
+  );
+  return `Comp_${legalCompName}`;
+};
+
+const layoutNameAbbr = (filePath: string) => {
+  const prefix = 'L_';
+  const dirName = path.dirname(filePath).split('/').pop() || '';
+  return `${prefix}${makeLegalIdentifier(dirName)}`;
+};
+
 const parents: Route[] = [];
 
-/* eslint-disable max-statements, no-param-reassign */
+/* eslint-disable no-param-reassign */
 const recursiveReadDir = ({
   dir,
   routes,
@@ -82,12 +95,13 @@ const recursiveReadDir = ({
       throw new Error(`should use _app instead of _layout in ${dir}`);
     } else {
       const alias = replaceWithAlias(srcDirectory, layout, srcAlias);
+      const componentName = compName(srcDirectory, layout);
       const route: Route = {
         path: `${basePath.substring(0, basePath.length - 1)}`,
         exact: false,
         routes: [],
         _component: alias,
-        component: makeLegalIdentifier(alias),
+        component: componentName,
         parent,
       };
       parent = route;
@@ -104,7 +118,7 @@ const recursiveReadDir = ({
     if (!shouldSkip(filePath)) {
       const filename = path.basename(filePath, path.extname(filePath));
       const alias = replaceWithAlias(srcDirectory, filePath, srcAlias);
-
+      const componentName = compName(srcDirectory, filePath);
       const dynamicRouteMatched =
         FILE_SYSTEM_ROUTES_DYNAMIC_REGEXP.exec(filename);
 
@@ -125,7 +139,7 @@ const recursiveReadDir = ({
             : filename
         }`,
         _component: alias,
-        component: makeLegalIdentifier(alias),
+        component: componentName,
         exact: true,
         parent,
       };
@@ -159,13 +173,13 @@ const recursiveReadDir = ({
 
       routes.push(route);
     }
+  }
 
-    if (resetParent) {
-      parents.pop();
-    }
+  if (resetParent) {
+    parents.pop();
   }
 };
-/* eslint-enable max-statements, no-param-reassign */
+/* eslint-enable  no-param-reassign */
 
 const normalizeNestedRoutes = (
   nested: Route[],
@@ -183,7 +197,7 @@ const normalizeNestedRoutes = (
   const generate = (route: Route) => {
     const codes = [];
 
-    let lastComponent = `Comp_${route.component}`;
+    let lastComponent = route.component;
 
     const imports = [
       `import React from 'react';`,
@@ -192,12 +206,13 @@ const normalizeNestedRoutes = (
 
     // eslint-disable-next-line no-param-reassign, no-cond-assign
     while ((route = route.parent!)) {
-      imports.push(`import ${route.component} from '${route._component}';`);
+      const layoutComponent = route.component;
+      const layoutComponentAbbr = layoutNameAbbr(route._component);
+      imports.push(`import ${layoutComponent} from '${route._component}';`);
 
-      const currentComponent = `${lastComponent}_${route.component}`;
-
+      const currentComponent = `${layoutComponentAbbr}_${lastComponent}`;
       codes.push(
-        `const ${currentComponent} = props => <${route.component} Component={${lastComponent}} {...props} />;`,
+        `const ${currentComponent} = props => <${layoutComponent} Component={${lastComponent}} {...props} />;`,
       );
 
       lastComponent = currentComponent;

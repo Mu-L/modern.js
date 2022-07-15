@@ -1,6 +1,11 @@
-import Chain from 'webpack-chain';
 import { getPostcssConfig } from '@modern-js/css-config';
-import { NormalizedConfig } from '@modern-js/core';
+import { CHAIN_ID } from '@modern-js/utils';
+import type { NormalizedConfig } from '@modern-js/core';
+import type WebpackChain from '@modern-js/utils/webpack-chain';
+
+export const enableCssExtract = (config: NormalizedConfig) => {
+  return config.output.disableCssExtract !== true;
+};
 
 interface CSSLoaderOptions {
   modules?:
@@ -13,7 +18,7 @@ interface CSSLoaderOptions {
           | 'asIs'
           | 'camelCaseOnly'
           | 'dashes'
-          | 'dashsOnly';
+          | 'dashesOnly';
       };
   importLoaders: number;
   esModule?: boolean;
@@ -21,45 +26,59 @@ interface CSSLoaderOptions {
 }
 
 export const createCSSRule = (
-  chain: Chain,
+  chain: WebpackChain,
   { appDirectory, config }: { config: NormalizedConfig; appDirectory: string },
   {
     name,
     test,
     exclude,
     genTSD,
-  }: { name: string; test: RegExp; exclude?: RegExp[]; genTSD?: boolean },
+  }: {
+    name: string;
+    test: RegExp | RegExp[];
+    exclude?: Array<RegExp | ((path: string) => boolean)>;
+    genTSD?: boolean;
+  },
   options: CSSLoaderOptions,
 ) => {
   const postcssOptions = getPostcssConfig(appDirectory, config);
+  const loaders = chain.module.rule(CHAIN_ID.RULE.LOADERS);
+  const isExtractCSS = enableCssExtract(config);
+  const rule = loaders.oneOf(name);
 
-  const loaders = chain.module.rule('loaders');
-
-  loaders
-    .oneOf(name)
+  rule
     .test(test)
-    .use('mini-css-extract')
-    .loader(require('mini-css-extract-plugin').loader)
-    .options(
-      chain.output.get('publicPath') === './' ? { publicPath: '../../' } : {},
-    )
-    .end()
-    .when(Boolean(genTSD), c => {
-      c.use('css-modules-typescript')
-        .loader(require.resolve('css-modules-typescript-loader'))
+    .when(isExtractCSS, c => {
+      c.use(CHAIN_ID.USE.MINI_CSS_EXTRACT)
+        .loader(require('mini-css-extract-plugin').loader)
+        .options(
+          chain.output.get('publicPath') === './'
+            ? { publicPath: '../../' }
+            : {},
+        )
         .end();
     })
-    .use('css')
-    .loader(require.resolve('css-loader'))
+    .when(!isExtractCSS, c => {
+      c.use(CHAIN_ID.USE.STYLE).loader(require.resolve('style-loader')).end();
+    })
+    .when(Boolean(genTSD), c => {
+      c.use(CHAIN_ID.USE.CSS_MODULES_TS)
+        .loader(require.resolve('../../compiled/css-modules-typescript-loader'))
+        .end();
+    })
+    .use(CHAIN_ID.USE.CSS)
+    .loader(require.resolve('../../compiled/css-loader'))
     .options(options)
     .end()
-    .use('postcss')
-    .loader(require.resolve('postcss-loader'))
+    .use(CHAIN_ID.USE.POSTCSS)
+    .loader(require.resolve('../../compiled/postcss-loader'))
     .options(postcssOptions);
 
-  loaders.oneOf(name).merge({ sideEffects: true });
+  rule.merge({ sideEffects: true });
 
   if (exclude) {
-    loaders.oneOf(name).exclude.add(exclude);
+    exclude.forEach(item => {
+      rule.exclude.add(item);
+    });
   }
 };

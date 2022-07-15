@@ -1,16 +1,17 @@
-// eslint-disable-next-line filenames/match-exported
 import path from 'path';
-import { createPlugin, registerPrefetch } from '@modern-js/runtime-core';
+import { registerPrefetch } from '@modern-js/runtime-core';
+import type { Plugin } from '@modern-js/runtime-core';
+
 import { SSRServerContext } from './serverRender/type';
 import prefetch from './prefetch';
-
-export { run, useHeaders } from './hook';
+import { formatServer } from './utils';
 
 const registeredApps = new WeakSet();
 
-const plugin: any = () =>
-  createPlugin(
-    () => ({
+const plugin = (): Plugin => ({
+  name: '@modern-js/plugin-ssr',
+  setup: () => {
+    return {
       server: async ({ App, context }) => {
         if (!registeredApps.has(App)) {
           registerPrefetch(App, _context => prefetch(App, _context));
@@ -29,33 +30,30 @@ const plugin: any = () =>
 
         return null;
       },
-      pickContext: ({ context, pickedContext }, next) => {
+      init({ context }, next) {
         const { request }: { request: SSRServerContext['request'] } =
-          context?.ssrContext;
+          context.ssrContext;
 
-        const {
-          cookie,
-          'user-agent': userAgent,
-          referer,
-        } = request.headers || {};
+        context.ssrContext.request = formatServer(request);
+        return next({ context });
+      },
+      pickContext: ({ context, pickedContext }, next) => {
+        const { request, response } = context?.ssrContext;
+        const { initialData } = context;
 
         return next({
           context,
           pickedContext: {
             ...pickedContext,
-            request: {
-              cookie,
-              userAgent,
-              referer,
-              ...request,
-            },
-            // FIXME: error TS2322: Type '{ request: any; store: Store<any, AnyAction> & { use: UseModel; }; }' is not assignable to type 'TRuntimeContext'. Object literal may only specify known properties, and 'request' does not exist in type 'TRuntimeContext'.
-          } as any,
+            initialData,
+            request,
+            response,
+          },
         });
       },
-    }),
-    { name: '@modern-js/plugin-ssr' },
-  );
+    };
+  },
+});
 
 export default plugin;
 export * from './react';

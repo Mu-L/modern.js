@@ -1,6 +1,6 @@
 import { Application } from 'egg';
 import type { Middleware as KoaMiddleware } from 'koa';
-import { requireModule } from '@modern-js/bff-utils';
+import { compatRequire } from '@modern-js/utils';
 
 type Middleware = KoaMiddleware | string | [KoaMiddleware, Record<string, any>];
 
@@ -10,7 +10,6 @@ const registerMiddleware = (app: Application, middleware: Middleware) => {
   }
 
   if (!Array.isArray(middleware)) {
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     throw new Error(`middleware must be a array, but found ${middleware}`);
   }
 
@@ -22,7 +21,7 @@ const registerMiddleware = (app: Application, middleware: Middleware) => {
       config = middlewareItem[1];
     }
     if (typeof middlewareFunc === 'string') {
-      middlewareFunc = requireModule(middlewareFunc);
+      middlewareFunc = compatRequire(middlewareFunc);
     }
     if (middlewareFunc) {
       if (config) {

@@ -15,18 +15,17 @@ describe('plugin-multiprocess', () => {
 
   it('default', async () => {
     expect(plugin).toBeDefined();
+    expect(plugin().name).toBe('@modern-js/plugin-multiprocess');
 
     const afterBuild = createAsyncWorkflow<any, any>();
-    manager.registe({
+    manager.registerHook({
       afterBuild,
     });
     manager.usePlugin(plugin);
-    manager.run(() => {
-      AppContext.set({
-        distDirectory,
-        plugins: [],
-      } as any);
-    });
+    AppContext.set({
+      distDirectory,
+      plugins: [],
+    } as any);
     const runner = await manager.init();
     runner.afterBuild();
   });

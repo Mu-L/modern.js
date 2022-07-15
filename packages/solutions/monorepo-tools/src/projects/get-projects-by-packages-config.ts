@@ -1,7 +1,6 @@
 import * as path from 'path';
 import { PackageJsonLookup } from '@rushstack/node-core-library';
-import globby from 'globby';
-import type { GlobbyOptions } from 'globby';
+import { globby, GlobbyOptions } from '@modern-js/utils';
 import pMap from 'p-map';
 import { errorLog } from '../log/error';
 import { Package } from '../package';
@@ -75,7 +74,7 @@ const makeFileFinder = (
   };
 };
 
-export const getProjetsByPackageConfig = async (
+export const getProjectsByPackageConfig = async (
   rootPath: string,
   packagesConfig: string[],
   ignoreConfigs: string[],
@@ -127,7 +126,7 @@ const makeSyncFileFinder = (
   };
 };
 
-export const syncGetProjetsByPackageConfig = (
+export const syncGetProjectsByPackageConfig = (
   rootPath: string,
   packagesConfig: string[],
   ignoreConfigs: string[],

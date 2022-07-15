@@ -1,6 +1,6 @@
-import { JSONSchemaType } from 'ajv';
 import { isObject, createDebugger } from '@modern-js/utils';
-import cloneDeep from 'lodash.clonedeep';
+import { cloneDeep } from '@modern-js/utils/lodash';
+import type { JSONSchemaType } from '../../../compiled/ajv';
 import { source } from './source';
 import { output } from './output';
 import { server } from './server';
@@ -81,11 +81,9 @@ export const patchSchema = (
 
     const targetNode = findTargetNode(props);
 
-    if (targetNode.hasOwnProperty(mountProperty!)) {
-      throw new Error(`${target} already exists in current validate schema`);
+    if (!targetNode.hasOwnProperty(mountProperty!)) {
+      (targetNode as any)[mountProperty as string] = cloneDeep(schema);
     }
-
-    (targetNode as any)[mountProperty as string] = cloneDeep(schema);
   }
 
   debug(`final validate schema: %o`, finalSchema);

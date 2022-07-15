@@ -24,7 +24,7 @@ describe('client', () => {
         () => ({
           __esModule: true,
           // eslint-disable-next-line @typescript-eslint/no-empty-function
-          createRquest: () => {},
+          createRequest: () => {},
         }),
         { virtual: true },
       );
@@ -85,7 +85,7 @@ export const post = createRequest('/:id/origin/foo', 'POST', process.env.PORT ||
         () => ({
           __esModule: true,
           // eslint-disable-next-line @typescript-eslint/no-empty-function
-          createRquest: () => {},
+          createRequest: () => {},
         }),
         { virtual: true },
       );
@@ -110,7 +110,6 @@ export const post = createRequest('/:id/origin/foo', 'POST', process.env.PORT ||
   });
 
   describe('getMethodAndStatementFromName', () => {
-    // eslint-disable-next-line max-statements
     it('should support normal http method', () => {
       const result0 = getMethodAndStatementFromName('get');
 
@@ -187,7 +186,6 @@ export const post = createRequest('/:id/origin/foo', 'POST', process.env.PORT ||
       expect(result.value[1]).toBe('default');
     });
 
-    // eslint-disable-next-line max-statements
     it('should case insensitive at method and case sensitive at valuable name', () => {
       const result0 = getMethodAndStatementFromName('Get');
 
@@ -314,7 +312,7 @@ export const post = createRequest('/:id/origin/foo', 'POST', process.env.PORT ||
       const result = getRouteName(resourcePath, PWD);
       expect(result.isOk).toBeFalsy();
       assert(!result.isOk);
-      expect(result.value).toBe('Invalid API defination file');
+      expect(result.value).toBe('Invalid API definition file');
     });
 
     it('should fail when resource path is not a legal api file path', () => {
@@ -325,7 +323,7 @@ export const post = createRequest('/:id/origin/foo', 'POST', process.env.PORT ||
       const result = getRouteName(resourcePath, PWD);
       expect(result.isOk).toBeFalsy();
       assert(!result.isOk);
-      expect(result.value).toBe('Invalid API defination file');
+      expect(result.value).toBe('Invalid API definition file');
     });
 
     it('should fail when resource path is not absolute path', () => {

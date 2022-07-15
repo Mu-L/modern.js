@@ -8,7 +8,8 @@ import {
   generateMetaTags,
   getEntryOptions,
 } from '@modern-js/utils';
-import { IAppContext, NormalizedConfig } from '@modern-js/core';
+import { template } from '@modern-js/utils/lodash';
+import type { IAppContext, NormalizedConfig } from '@modern-js/core';
 import type { Entrypoint } from '@modern-js/types';
 import { DEV_CLIENT_PATH_ALIAS, DEV_CLIENT_URL } from './constants';
 
@@ -51,8 +52,12 @@ const injectScripts = (
   ];
 
   if (isFastRefresh()) {
-    const runtimePath = require.resolve(
-      'react-refresh/cjs/react-refresh-runtime.development.js',
+    const reactFreshEntry = path.dirname(
+      require.resolve('react-refresh/package.json'),
+    );
+    const runtimePath = path.join(
+      reactFreshEntry,
+      'cjs/react-refresh-runtime.development.js',
     );
 
     const reactRefreshCode = fs
@@ -78,7 +83,7 @@ const injectScripts = (
 
 // provide process/module global variable
 // TODO: should take better strategy
-const injectEnv = (userConfig: NormalizedConfig): string => {
+export const injectEnv = (userConfig: NormalizedConfig): string => {
   // inject globalVars
   let {
     source: { globalVars },
@@ -88,13 +93,21 @@ const injectEnv = (userConfig: NormalizedConfig): string => {
 
   const globalVarKeys = Object.keys(globalVars);
 
-  let gloablVarStr = ``;
+  let globalVarStr = ``;
 
   globalVarKeys.forEach(key => {
-    gloablVarStr += `window.${key}=${JSON.stringify(globalVars![key])}\n`;
+    globalVarStr += `window.${key}=${JSON.stringify(globalVars![key])}\n`;
   });
 
-  return `<script>${gloablVarStr}\nwindow.process={env: { NODE_ENV: 'development'}};\nwindow.module={};\n</script>\n`;
+  const processStr = `window.process={env: { NODE_ENV: 'development'}};;`;
+  const moduleStr = `window.module={};`;
+
+  return `<script>
+${processStr}
+${moduleStr}
+${globalVarStr}
+</script>
+`;
 };
 
 // inject const enum value to global object
@@ -132,7 +145,7 @@ const renderTemplate = (
 ) => {
   const content = fs.readFileSync(filepath, 'utf8');
 
-  return require('lodash.template')(content)(variables);
+  return template(content)(variables);
 };
 
 const initTemplateVariables = (

@@ -1,5 +1,148 @@
 # @modern-js/plugin-egg
 
+## 1.6.0
+
+### Minor Changes
+
+- 77a8e9e: feat: support bff operators
+
+### Patch Changes
+
+- f29e9ba: feat: simplify context usage, no longer depend on containers
+- Updated dependencies [77a8e9e]
+- Updated dependencies [b220f1d]
+- Updated dependencies [7b9e302]
+- Updated dependencies [a90bc96]
+  - @modern-js/adapter-helpers@1.3.0
+  - @modern-js/bff-core@1.1.0
+  - @modern-js/bff-runtime@1.3.0
+  - @modern-js/utils@1.7.9
+
+## 1.5.9
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+- Updated dependencies [a1198d509]
+  - @modern-js/adapter-helpers@1.2.6
+  - @modern-js/bff-runtime@1.2.4
+  - @modern-js/bff-utils@1.2.9
+
+## 1.5.8
+
+### Patch Changes
+
+- bfccb4c8: fix: bff runtime path not found in development
+- Updated dependencies [d57e7622]
+- Updated dependencies [6451a098]
+- Updated dependencies [d5a2cfd8]
+- Updated dependencies [437367c6]
+  - @modern-js/bff-utils@1.2.8
+  - @modern-js/utils@1.7.6
+
+## 1.5.7
+
+### Patch Changes
+
+- d32f35134: chore: add modern/jest/eslint/ts config files to .npmignore
+- Updated dependencies [d32f35134]
+- Updated dependencies [6ae4a34ae]
+- Updated dependencies [b80229c79]
+- Updated dependencies [948cc4436]
+  - @modern-js/adapter-helpers@1.2.4
+  - @modern-js/bff-runtime@1.2.3
+  - @modern-js/bff-utils@1.2.6
+  - @modern-js/utils@1.7.3
+
+## 1.5.6
+
+### Patch Changes
+
+- 69a728375: fix: remove exports.jsnext:source after publish
+- Updated dependencies [cd7346b0d]
+- Updated dependencies [69a728375]
+  - @modern-js/utils@1.7.2
+  - @modern-js/bff-utils@1.2.5
+
+## 1.5.5
+
+### Patch Changes
+
+- 04ae5262: chore: bump @modern-js/utils to v1.4.1 in dependencies
+- 60f7d8bf: feat: add tests dir to npmignore
+- befd9e5b: fix: compatible with babel-plugin-resolver's handling of relative paths on windows
+- Updated dependencies [b8599d09]
+- Updated dependencies [6cffe99d]
+- Updated dependencies [04ae5262]
+- Updated dependencies [60f7d8bf]
+- Updated dependencies [befd9e5b]
+- Updated dependencies [3bf4f8b0]
+  - @modern-js/utils@1.5.0
+  - @modern-js/adapter-helpers@1.2.3
+  - @modern-js/bff-runtime@1.2.2
+  - @modern-js/bff-utils@1.2.3
+
+## 1.5.4
+
+### Patch Changes
+
+- bebb39b6: chore: improve devDependencies and peerDependencies
+- Updated dependencies [132f7b53]
+  - @modern-js/utils@1.3.7
+
+## 1.5.3
+
+### Patch Changes
+
+- 952432ac: fix: upload files
+- c1b8fa0a: feat: convert to new server plugin
+- Updated dependencies [c2046f37]
+  - @modern-js/utils@1.3.6
+
+## 1.5.2
+
+### Patch Changes
+
+- ef7b0a54: feat: convert to new plugin
+- Updated dependencies [5bf5868d]
+- Updated dependencies [d95f28c3]
+- Updated dependencies [2e8dec93]
+- Updated dependencies [2008fdbd]
+- Updated dependencies [2e8dec93]
+  - @modern-js/utils@1.3.5
+  - @modern-js/server-core@1.2.3
+
+## 1.5.1
+
+### Patch Changes
+
+- 9594df3f: fix: allow user to set statusCode 404
+- Updated dependencies [deeaa602]
+- Updated dependencies [54786e58]
+  - @modern-js/utils@1.3.2
+  - @modern-js/core@1.4.3
+
+## 1.5.0
+
+### Minor Changes
+
+- ec4dbffb: feat: support as a pure api service
+
+### Patch Changes
+
+- 272cab15: refactor server plugin manager
+- Updated dependencies [d9cc5ea9]
+- Updated dependencies [bd819a8d]
+- Updated dependencies [ec4dbffb]
+- Updated dependencies [d099e5c5]
+- Updated dependencies [bada2879]
+- Updated dependencies [24f616ca]
+- Updated dependencies [bd819a8d]
+- Updated dependencies [272cab15]
+  - @modern-js/core@1.4.0
+  - @modern-js/utils@1.3.0
+  - @modern-js/server-core@1.2.2
+
 ## 1.4.1
 
 ### Patch Changes

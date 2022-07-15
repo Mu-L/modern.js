@@ -1,55 +1,66 @@
-import {
-  createPlugin,
-  useAppContext,
-  useResolvedConfigContext,
-  registerHook,
-} from '@modern-js/core';
+import type { CliPlugin } from '@modern-js/core';
 import { PLUGIN_SCHEMAS } from '@modern-js/utils';
 import { dev } from './dev';
-import * as unbundleHooks from './hooks';
+import { hooks } from './hooks';
 
 export * from './hooks';
 
-registerHook({ ...unbundleHooks });
+export default (): CliPlugin => ({
+  name: '@modern-js/plugin-unbundle',
 
-export default createPlugin(
-  () => ({
-    validateSchema() {
-      return PLUGIN_SCHEMAS['@modern-js/plugin-unbundle'];
-    },
-    commands({ program }) {
-      const appContext = useAppContext();
+  registerHook: hooks,
 
-      const config = useResolvedConfigContext();
+  setup: api => {
+    let closeDevServer: (() => Promise<void>) | undefined;
 
-      const devCommand = program.commandsMap.get('dev');
+    return {
+      validateSchema() {
+        return PLUGIN_SCHEMAS['@modern-js/plugin-unbundle'];
+      },
+      commands({ program }) {
+        const appContext = api.useAppContext();
+        const config = api.useResolvedConfigContext();
 
-      devCommand?.option('--unbundled', 'dev with unbundled mode');
+        const devCommand = program.commandsMap.get('dev');
 
-      if (
-        process.argv.slice(2)[0] === 'dev' &&
-        process.argv.includes('--unbundled')
-      ) {
-        devCommand?.action(async () => {
-          await dev(config, appContext);
-        });
-      }
-    },
-    async htmlPartials({ entrypoint, partials }) {
-      if (process.argv[2] === 'dev' && process.argv.includes('--unbundled')) {
-        const appContext = useAppContext();
-        const config = useResolvedConfigContext();
+        devCommand?.option('--unbundled', 'dev with unbundled mode');
 
-        const { createHtmlPartials } = await import('./create-entry');
+        if (
+          process.argv.slice(2)[0] === 'dev' &&
+          process.argv.includes('--unbundled')
+        ) {
+          devCommand?.action(async () => {
+            if (closeDevServer) {
+              await closeDevServer();
+              closeDevServer = undefined;
+            }
+            closeDevServer = await dev(api, config, appContext);
+          });
+        }
+      },
+      async beforeRestart() {
+        if (closeDevServer) {
+          await closeDevServer();
+        }
+        closeDevServer = undefined;
+      },
+      async htmlPartials({ entrypoint, partials }) {
+        if (process.argv[2] === 'dev' && process.argv.includes('--unbundled')) {
+          const appContext = api.useAppContext();
+          const config = api.useResolvedConfigContext();
 
-        partials.head.push(createHtmlPartials(entrypoint, appContext, config));
-      }
+          const { createHtmlPartials } = await import('./create-entry');
 
-      return {
-        entrypoint,
-        partials,
-      };
-    },
-  }),
-  { name: '@modern-js/plugin-unbundle' },
-);
+          partials.head.push(
+            createHtmlPartials(entrypoint, appContext, config),
+          );
+        }
+
+        return {
+          entrypoint,
+          partials,
+        };
+      },
+    };
+  },
+});

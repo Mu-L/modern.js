@@ -1,182 +1,62 @@
-import { loadConfig } from '@modern-js/load-config';
-import Ajv, { ErrorObject } from 'ajv';
-import ajvKeywords from 'ajv-keywords';
-import logger from 'signale';
 import {
+  signale as logger,
   createDebugger,
   getPort,
   isDev,
-  MetaOptions,
   PLUGIN_SCHEMAS,
   chalk,
+  isPlainObject,
+  getServerConfig,
+  getPackageManager,
 } from '@modern-js/utils';
-import mergeWith from 'lodash.mergewith';
-import betterAjvErrors from 'better-ajv-errors';
-import { codeFrameColumns } from '@babel/code-frame';
-import { PluginConfig } from '../loadPlugins';
+import { mergeWith } from '@modern-js/utils/lodash';
+import { loadConfig } from '../load-configs';
+
+import Ajv, { ErrorObject } from '../../compiled/ajv';
+import ajvKeywords from '../../compiled/ajv-keywords';
+import betterAjvErrors from '../../compiled/better-ajv-errors';
 import { repeatKeyWarning } from '../utils/repeatKeyWarning';
 import { defaults } from './defaults';
 import { mergeConfig, NormalizedConfig } from './mergeConfig';
 import { patchSchema, PluginValidateSchema } from './schema';
+import type { UserConfig, ConfigParam, LoadedConfig } from './types';
 
 const debug = createDebugger('resolve-config');
 
 export { defaults as defaultsConfig };
-export { mergeConfig };
+export * from './mergeConfig';
+export * from './types';
+export * from './schema';
 
-interface SourceConfig {
-  entries?: Record<
-    string,
-    | string
-    | {
-        entry: string;
-        enableFileSystemRoutes?: boolean;
-        disableMount?: boolean;
-      }
-  >;
-  disableDefaultEntries?: boolean;
-  entriesDir?: string;
-  configDir?: string;
-  apiDir?: string;
-  envVars?: Array<string>;
-  globalVars?: Record<string, string>;
-  alias?:
-    | Record<string, string>
-    | ((aliases: Record<string, string>) => Record<string, unknown>);
-  moduleScopes?:
-    | Array<string | RegExp>
-    | ((scopes: Array<string | RegExp>) => Array<string | RegExp>);
-  include?: Array<string | RegExp>;
-}
-
-interface OutputConfig {
-  assetPrefix?: string;
-  htmlPath?: string;
-  jsPath?: string;
-  cssPath?: string;
-  mediaPath?: string;
-  path?: string;
-  title?: string;
-  titleByEntries?: Record<string, string>;
-  meta?: MetaOptions;
-  metaByEntries?: Record<string, MetaOptions>;
-  inject?: 'body' | 'head' | boolean;
-  injectByEntries?: Record<string, 'body' | 'head' | boolean>;
-  mountId?: string;
-  favicon?: string;
-  faviconByEntries?: Record<string, string | undefined>;
-  copy?: Record<string, unknown>;
-  scriptExt?: Record<string, unknown>;
-  disableHtmlFolder?: boolean;
-  disableCssModuleExtension?: boolean;
-  disableCssExtract?: boolean;
-  enableCssModuleTSDeclaration?: boolean;
-  disableMinimize?: boolean;
-  enableInlineStyles?: boolean;
-  enableInlineScripts?: boolean;
-  disableSourceMap?: boolean;
-  disableInlineRuntimeChunk?: boolean;
-  disableAssetsCache?: boolean;
-  enableLatestDecorators?: boolean;
-  polyfill?: 'off' | 'usage' | 'entry' | 'ua';
-  dataUriLimit?: number;
-  templateParameters?: Record<string, unknown>;
-  templateParametersByEntries?: Record<
-    string,
-    Record<string, unknown> | undefined
-  >;
-  cssModuleLocalIdentName?: string;
-  enableModernMode?: boolean;
-  federation?: boolean;
-  disableNodePolyfill?: boolean;
-  enableTsLoader?: boolean;
-}
-
-interface ServerConfig {
-  routes?: Record<
-    string,
-    | string
-    | {
-        route: string | string[];
-        disableSpa?: boolean;
-      }
-  >;
-  publicRoutes?: { [filepath: string]: string };
-  ssr?: boolean | Record<string, unknown>;
-  ssrByEntries?: Record<string, boolean | Record<string, unknown>>;
-  baseUrl?: string | Array<string>;
-  port?: number;
-  logger?: Record<string, any>;
-  metrics?: Record<string, any>;
-  enableMicroFrontendDebug?: boolean;
-}
-
-interface DevConfig {
-  assetPrefix?: string | boolean;
-  https?: boolean;
-}
-
-interface MicroFrontend {
-  enableHtmlEntry?: boolean;
-  externalBasicLibrary?: boolean;
-  moduleApp?: boolean;
-}
-
-interface DeployConfig {
-  microFrontend?: boolean | MicroFrontend;
-  domain?: string | Array<string>;
-  domainByEntries?: Record<string, string | Array<string>>;
-}
-
-type ConfigFunction =
-  | Record<string, unknown>
-  // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-  | ((config: Record<string, unknown>) => Record<string, unknown> | void);
-interface ToolsConfig {
-  webpack?: ConfigFunction;
-  babel?: ConfigFunction;
-  autoprefixer?: ConfigFunction;
-  postcss?: ConfigFunction;
-  lodash?: ConfigFunction;
-  devServer?: Record<string, unknown>;
-  tsLoader?: ConfigFunction;
-  terser?: ConfigFunction;
-  minifyCss?: ConfigFunction;
-  esbuild?: Record<string, unknown>;
-}
-
-type RuntimeConfig = Record<string, any>;
-
-interface RuntimeByEntriesConfig {
-  [name: string]: RuntimeConfig;
-}
-
-interface UserConfig {
-  source?: SourceConfig;
-  output?: OutputConfig;
-  server?: ServerConfig;
-  dev?: DevConfig;
-  deploy?: DeployConfig;
-  tools?: ToolsConfig;
-  plugins?: PluginConfig;
-  runtime?: RuntimeConfig;
-  runtimeByEntries?: RuntimeByEntriesConfig;
-}
-
-type ConfigParam =
-  | UserConfig
-  | Promise<UserConfig>
-  | ((env: any) => UserConfig | Promise<UserConfig>);
-
-interface LoadedConfig {
-  config: UserConfig;
-  filePath: string | false;
-  dependencies: string[];
-  pkgConfig: UserConfig;
-  jsConfig: UserConfig;
-}
+export const addServerConfigToDeps = async (
+  dependencies: string[],
+  appDirectory: string,
+  serverConfigFile: string,
+) => {
+  const serverConfig = await getServerConfig(appDirectory, serverConfigFile);
+  if (serverConfig) {
+    dependencies.push(serverConfig);
+  }
+};
 
 export const defineConfig = (config: ConfigParam): ConfigParam => config;
+
+/**
+ * Assign the pkg config into the user config.
+ */
+export const assignPkgConfig = (
+  userConfig: UserConfig = {},
+  pkgConfig: ConfigParam = {},
+) =>
+  mergeWith({}, userConfig, pkgConfig, (objValue, srcValue) => {
+    // mergeWith can not merge object with symbol, but plugins object contains symbol,
+    // so we need to handle it manually.
+    if (objValue === undefined && isPlainObject(srcValue)) {
+      return { ...srcValue };
+    }
+    // return undefined to use the default behavior of mergeWith
+    return undefined;
+  });
 
 export const loadUserConfig = async (
   appDirectory: string,
@@ -196,23 +76,25 @@ export const loadUserConfig = async (
         : loaded.config);
 
   return {
-    config: mergeWith({}, config || {}, loaded?.pkgConfig || {}),
-    jsConfig: (config || {}) as any,
+    config: assignPkgConfig(config, loaded?.pkgConfig),
+    jsConfig: config || {},
     pkgConfig: (loaded?.pkgConfig || {}) as UserConfig,
     filePath: loaded?.path,
     dependencies: loaded?.dependencies || [],
   };
 };
 
-const showAdditionalPropertiesError = (error: ErrorObject) => {
+const showAdditionalPropertiesError = async (error: ErrorObject) => {
   if (
     error.keyword === 'additionalProperties' &&
-    error.instancePath &&
     error.params.additionalProperty
   ) {
-    const target = `${error.instancePath.substr(1)}.${
-      error.params.additionalProperty
-    }`;
+    const target = [
+      error.instancePath.slice(1),
+      error.params.additionalProperty,
+    ]
+      .filter(Boolean)
+      .join('.');
 
     const name = Object.keys(PLUGIN_SCHEMAS).find(key =>
       (PLUGIN_SCHEMAS as Record<string, any>)[key].some(
@@ -221,24 +103,27 @@ const showAdditionalPropertiesError = (error: ErrorObject) => {
     );
 
     if (name) {
+      const packageManager = await getPackageManager();
       logger.warn(
         `The configuration of ${chalk.bold(
           target,
         )} is provided by plugin ${chalk.bold(name)}. Please use ${chalk.bold(
-          'yarn new',
+          `${packageManager} run new`,
         )} to enable the corresponding capability.\n`,
       );
     }
   }
 };
 
-/* eslint-disable max-statements, max-params */
 export const resolveConfig = async (
   loaded: LoadedConfig,
   configs: UserConfig[],
   schemas: PluginValidateSchema[],
   restartWithExistingPort: number,
   argv: string[],
+  onSchemaError: (
+    error: ErrorObject,
+  ) => void | Promise<void> = showAdditionalPropertiesError,
 ): Promise<NormalizedConfig> => {
   const { config: userConfig, jsConfig, pkgConfig } = loaded;
 
@@ -256,7 +141,8 @@ export const resolveConfig = async (
   const valid = validate(userConfig);
 
   if (!valid && validate.errors?.length) {
-    showAdditionalPropertiesError(validate?.errors[0]);
+    await onSchemaError(validate?.errors[0]);
+
     const errors = betterAjvErrors(
       validateSchema,
       userConfig,
@@ -265,24 +151,11 @@ export const resolveConfig = async (
         dataPath: e.instancePath,
       })),
       {
-        format: 'js',
         indent: 2,
       },
     );
 
-    logger.log(
-      codeFrameColumns(
-        JSON.stringify(userConfig, null, 2),
-        {
-          start: errors?.[0].start as any,
-          end: errors?.[0].end as any,
-        },
-        {
-          highlightCode: true,
-          message: errors?.[0].error,
-        },
-      ),
-    );
+    logger.log(errors);
     throw new Error(`Validate configuration error`);
   }
 
@@ -293,7 +166,7 @@ export const resolveConfig = async (
       throw new Error(`Validate configuration error.`);
     }
   }
-  const resolved = mergeConfig([defaults as any, ...configs, userConfig]);
+  const resolved = mergeConfig([defaults, ...configs, userConfig]);
 
   resolved._raw = loaded.config;
 
@@ -310,19 +183,4 @@ export const resolveConfig = async (
   debug('resolved %o', resolved);
 
   return resolved;
-};
-/* eslint-enable max-statements, max-params */
-
-export type {
-  SourceConfig,
-  OutputConfig,
-  ServerConfig,
-  DevConfig,
-  DeployConfig,
-  ToolsConfig,
-  RuntimeConfig,
-  RuntimeByEntriesConfig,
-  UserConfig,
-  ConfigParam,
-  LoadedConfig,
 };

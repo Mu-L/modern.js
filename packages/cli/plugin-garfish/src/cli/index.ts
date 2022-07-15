@@ -1,69 +1,66 @@
 import path from 'path';
-import {
-  createRuntimeExportsUtils,
-  getEntryOptions,
-  PLUGIN_SCHEMAS,
-} from '@modern-js/utils';
-import {
-  createPlugin,
-  NormalizedConfig,
-  useAppContext,
-  useResolvedConfigContext,
+import { createRuntimeExportsUtils, PLUGIN_SCHEMAS } from '@modern-js/utils';
+import type {
+  CliHookCallbacks,
+  CliPlugin,
+  useConfigContext,
 } from '@modern-js/core';
-import type WebpackChain from 'webpack-chain';
 import { logger } from '../util';
-import { makeProvider, makeRenderFunction } from './utils';
+import {
+  getRuntimeConfig,
+  makeProvider,
+  makeRenderFunction,
+  setRuntimeConfig,
+} from './utils';
 
-type GetFirstArgumentOfFunction<T> = T extends (
-  first: infer FirstArgument,
-  ...args: any[]
-) => any
-  ? FirstArgument
-  : never;
+export type UseConfig = ReturnType<typeof useConfigContext>;
 
-interface InitializerOptions {
-  validateSchema: () => Array<any>;
-  externals: any;
-  componentKey: string;
-}
+export const externals = { 'react-dom': 'react-dom', react: 'react' };
 
-type InitializerFn = GetFirstArgumentOfFunction<typeof createPlugin>;
+export type LifeCycle = CliHookCallbacks;
 
-function getRuntimeConfig(config: NormalizedConfig) {
-  if (config?.runtime?.feature) {
-    return config?.runtime?.feature;
-  }
-  return config?.runtime;
-}
+type NonInValidAble<T> = T extends null | undefined | false ? never : T;
 
-function setRuntimeConfig(config: NormalizedConfig, key: string, value: any) {
-  if (config?.runtime && config?.runtime[key]) {
-    config.runtime[key] = value;
-  }
-  if (config?.runtime?.feature && config?.runtime?.feature[key]) {
-    config.runtime.feature[key] = value;
-  }
-}
-
-export const initializer: (options: InitializerOptions) => InitializerFn =
-  ({ validateSchema, externals, componentKey, ...otherLifeCycle }) =>
-  () => {
-    const configMap = new Map<string, any>();
-    let pluginsExportsUtils: ReturnType<typeof createRuntimeExportsUtils>;
-
-    let runtimeExportsUtils: ReturnType<typeof createRuntimeExportsUtils>;
-
+export function getDefaultMicroFrontedConfig(
+  microFrontend: NonInValidAble<
+    NonNullable<UseConfig['deploy']>['microFrontend']
+  >,
+) {
+  if (microFrontend === true) {
     return {
-      resolvedConfig(config) {
+      enableHtmlEntry: true,
+      externalBasicLibrary: false,
+      moduleApp: '',
+    };
+  }
+
+  return {
+    enableHtmlEntry: true,
+    externalBasicLibrary: false,
+    ...microFrontend,
+  };
+}
+
+export default ({
+  runtimePluginName = '@modern-js/runtime/plugins',
+  mfPackagePath = path.resolve(__dirname, '../../../../'),
+} = {}): CliPlugin => ({
+  name: '@modern-js/plugin-garfish',
+  setup: ({ useAppContext, useResolvedConfigContext, useConfigContext }) => {
+    let pluginsExportsUtils: ReturnType<typeof createRuntimeExportsUtils>;
+    let runtimeExportsUtils: ReturnType<typeof createRuntimeExportsUtils>;
+    return {
+      validateSchema() {
+        return PLUGIN_SCHEMAS['@modern-js/plugin-garfish'];
+      },
+      resolvedConfig: async config => {
         const { resolved } = config;
         const { masterApp, router } = getRuntimeConfig(resolved);
-
         const nConfig = {
           resolved: {
             ...resolved,
           },
         };
-
         if (masterApp) {
           // basename does not exist use router's basename
           setRuntimeConfig(
@@ -72,72 +69,93 @@ export const initializer: (options: InitializerOptions) => InitializerFn =
             Object.assign(
               typeof masterApp === 'object' ? { ...masterApp } : {},
               {
-                basename: router?.basename || '/',
+                basename:
+                  router?.historyOptions?.basename || router?.basename || '/',
               },
             ),
           );
         }
-
         logger(`resolvedConfig`, {
+          output: nConfig.resolved.output,
           runtime: nConfig.resolved.runtime,
           deploy: nConfig.resolved.deploy,
           server: nConfig.resolved.server,
         });
-
         return nConfig;
       },
       config() {
         // eslint-disable-next-line react-hooks/rules-of-hooks
-        const config = useAppContext();
+        const useConfig = useConfigContext();
+        logger('useConfig', useConfig);
 
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const config = useAppContext();
         pluginsExportsUtils = createRuntimeExportsUtils(
           config.internalDirectory,
           'plugins',
         );
-
         runtimeExportsUtils = createRuntimeExportsUtils(
           config.internalDirectory,
           'index',
         );
 
+        let disableCssExtract = useConfig.output?.disableCssExtract ?? false;
+
+        // When the micro-frontend application js entry, there is no need to extract css, close cssExtract
+        if (useConfig.deploy?.microFrontend) {
+          const { enableHtmlEntry } = getDefaultMicroFrontedConfig(
+            useConfig.deploy?.microFrontend,
+          );
+          if (!enableHtmlEntry) {
+            disableCssExtract = true;
+          }
+        }
+
         return {
+          output: {
+            disableCssExtract,
+          },
           source: {
             alias: {
               '@modern-js/runtime/plugins': pluginsExportsUtils.getPath(),
+              '@modern-js/runtime/garfish': mfPackagePath,
             },
           },
           tools: {
-            webpack: (
-              webpackConfig: any,
+            devServer: {
+              headers: {
+                'Access-Control-Allow-Origin': '*',
+              },
+            },
+            webpackChain: (
+              chain,
               {
-                chain,
                 webpack,
-              }: { chain: WebpackChain; webpack: any; env: string },
+                env = process.env.NODE_ENV || 'development',
+                CHAIN_ID,
+              },
             ) => {
-              const env = process.env.NODE_ENV;
               // eslint-disable-next-line react-hooks/rules-of-hooks
-              const resolvedConfig = useResolvedConfigContext();
-
-              if (resolvedConfig?.deploy?.microFrontend) {
+              const resolveOptions = useResolvedConfigContext();
+              if (resolveOptions?.deploy?.microFrontend) {
                 chain.output.libraryTarget('umd');
-
-                if (resolvedConfig.server.port) {
+                if (resolveOptions?.server?.port && env === 'development') {
                   chain.output.publicPath(
-                    env === 'development'
-                      ? `//localhost:${resolvedConfig.server.port}/`
-                      : webpackConfig.output.publicPath,
+                    `//localhost:${resolveOptions.server.port}/`,
                   );
                 }
 
                 // add comments avoid sourcemap abnormal
-                chain
-                  .plugin('banner')
-                  .use(webpack.BannerPlugin, [{ banner: 'Micro front-end' }]);
+                if (webpack.BannerPlugin) {
+                  chain
+                    .plugin(CHAIN_ID.PLUGIN.BANNER)
+                    .use(webpack.BannerPlugin, [{ banner: 'Micro front-end' }]);
+                }
 
-                const { enableHtmlEntry = true, externalBasicLibrary = true } =
-                  typeof resolvedConfig?.deploy?.microFrontend === 'object'
-                    ? resolvedConfig?.deploy?.microFrontend
-                    : {};
+                const { enableHtmlEntry, externalBasicLibrary } =
+                  getDefaultMicroFrontedConfig(
+                    resolveOptions.deploy?.microFrontend,
+                  );
                 // external
                 if (externalBasicLibrary) {
                   chain.externals(externals);
@@ -145,60 +163,61 @@ export const initializer: (options: InitializerOptions) => InitializerFn =
                 // use html mode
                 if (!enableHtmlEntry) {
                   chain.output.filename('index.js');
-                  chain.plugins.delete('html-main');
+                  chain.plugins.delete(`${CHAIN_ID.PLUGIN.HTML}-main`);
                   chain.optimization.runtimeChunk(false);
                   chain.optimization.splitChunks({
                     chunks: 'async',
                   });
                 }
               }
-
               const resolveWebpackConfig = chain.toConfig();
               logger('webpackConfig', {
                 output: resolveWebpackConfig.output,
                 externals: resolveWebpackConfig.externals,
                 env,
+                alias: resolveWebpackConfig.resolve?.alias,
+                plugins: resolveWebpackConfig.plugins,
               });
             },
           },
         };
       },
       addRuntimeExports() {
-        const mfPackage = path.resolve(__dirname, '../../../../');
-        const addExportStatement = `export { default as garfish } from '${mfPackage}'`;
+        const addExportStatement = `export { default as garfish, default as masterApp, hoistNonReactStatics } from '${mfPackagePath}'`;
         logger('exportStatement', addExportStatement);
         pluginsExportsUtils.addExport(addExportStatement);
-
-        runtimeExportsUtils.addExport(`export * from '${mfPackage}'`);
+        runtimeExportsUtils.addExport(`export * from '${mfPackagePath}'`);
       },
-      validateSchema,
       modifyEntryImports({ entrypoint, imports }: any) {
         // eslint-disable-next-line react-hooks/rules-of-hooks
-        const resolvedConfig = useResolvedConfigContext();
-        // support legacy config
-        const { masterApp } = getRuntimeConfig(resolvedConfig);
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        const { packageName } = useAppContext();
-
-        const masterAppConfig = getEntryOptions(
-          entrypoint.entryName,
-          masterApp,
-          resolvedConfig.runtimeByEntries,
-          packageName,
-        );
-
-        configMap.set(entrypoint.entryName, masterAppConfig);
-
-        if (masterAppConfig) {
+        const config = useResolvedConfigContext();
+        const { masterApp } = getRuntimeConfig(config);
+        if (masterApp) {
           imports.push({
-            value: '@modern-js/runtime/plugins',
+            value: runtimePluginName,
             specifiers: [
               {
                 imported: 'garfish',
               },
             ],
           });
+          imports.push({
+            value: runtimePluginName,
+            specifiers: [
+              {
+                imported: 'masterApp',
+              },
+            ],
+          });
         }
+        imports.push({
+          value: runtimePluginName,
+          specifiers: [
+            {
+              imported: 'hoistNonReactStatics',
+            },
+          ],
+        });
 
         imports.push({
           value: 'react-dom',
@@ -211,19 +230,21 @@ export const initializer: (options: InitializerOptions) => InitializerFn =
             },
           ],
         });
-
         return { imports, entrypoint };
       },
       modifyEntryRuntimePlugins({ entrypoint, plugins }: any) {
-        const masterAppConfig = configMap.get(entrypoint.entryName);
-
-        if (masterAppConfig) {
-          logger('garfishPlugin options', masterAppConfig);
-
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const config = useResolvedConfigContext();
+        const { masterApp } = getRuntimeConfig(config);
+        if (masterApp) {
+          logger('garfishPlugin options', masterApp);
           plugins.push({
             name: 'garfish',
             args: 'masterApp',
-            options: JSON.stringify(masterAppConfig),
+            options:
+              masterApp === true
+                ? JSON.stringify({})
+                : JSON.stringify(masterApp),
           });
         }
         return { entrypoint, plugins };
@@ -231,7 +252,6 @@ export const initializer: (options: InitializerOptions) => InitializerFn =
       modifyEntryRenderFunction({ entrypoint, code }: any) {
         // eslint-disable-next-line react-hooks/rules-of-hooks
         const config = useResolvedConfigContext();
-
         if (!config?.deploy?.microFrontend) {
           return { entrypoint, code };
         }
@@ -244,34 +264,20 @@ export const initializer: (options: InitializerOptions) => InitializerFn =
       },
       modifyEntryExport({ entrypoint, exportStatement }: any) {
         // eslint-disable-next-line react-hooks/rules-of-hooks
-        const resolvedConfig = useResolvedConfigContext();
-        if (resolvedConfig?.deploy?.microFrontend) {
-          const exportStatementCode = makeProvider(componentKey);
+        const config = useResolvedConfigContext();
+        if (config?.deploy?.microFrontend) {
+          const exportStatementCode = makeProvider();
           logger('exportStatement', exportStatementCode);
           return {
             entrypoint,
             exportStatement: exportStatementCode,
           };
         }
-
         return {
           entrypoint,
           exportStatement,
         };
       },
-      ...otherLifeCycle,
     };
-  };
-
-export default createPlugin(
-  initializer({
-    validateSchema() {
-      return PLUGIN_SCHEMAS['@modern-js/plugin-garfish'];
-    },
-    externals: { 'react-dom': 'react-dom', react: 'react' },
-    componentKey: 'dynamicComponent',
-  }),
-  {
-    name: '@modern-js/plugin-garfish',
   },
-);
+});

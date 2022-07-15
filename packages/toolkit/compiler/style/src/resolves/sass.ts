@@ -1,7 +1,7 @@
 import path from 'path';
 import { fs } from '@modern-js/utils';
 import sass from 'sass';
-import { toString, merge } from 'lodash';
+import { toString, merge } from '@modern-js/utils/lodash';
 import { ResolveItemParams, SingleFileCompilerResult } from '../types';
 import { postcssResolve } from './postcss';
 
@@ -12,11 +12,11 @@ const sassToCss = (
 ) => {
   const { file, options } = params;
   const ext = path.extname(file);
-  const enablIndentedSyntax = ext === '.sass';
+  const enableIndentedSyntax = ext === '.sass';
   const config = {
     file,
     data: sassCode,
-    indentedSyntax: enablIndentedSyntax,
+    indentedSyntax: enableIndentedSyntax,
     outFile,
   };
   const sassConfig = merge(config, options.sass);

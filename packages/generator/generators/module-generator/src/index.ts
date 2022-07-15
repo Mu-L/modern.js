@@ -12,7 +12,6 @@ import {
   DependenceGenerator,
   ModuleActionFunctionsDependencies,
   ActionFunction,
-  PackageManager,
   BooleanConfig,
 } from '@modern-js/generator-common';
 import {
@@ -35,7 +34,6 @@ const getGeneratorPath = (generator: string, distTag: string) => {
   return generator;
 };
 
-// eslint-disable-next-line max-statements
 export const handleTemplateFile = async (
   context: GeneratorContext,
   generator: GeneratorCore,
@@ -73,7 +71,6 @@ export const handleTemplateFile = async (
     await generatorPlugin.installPlugins(Solution.Module, extra);
     schema = generatorPlugin.getInputSchema(Solution.Module);
     inputValue = generatorPlugin.getInputValue();
-    // eslint-disable-next-line require-atomic-updates
     context.config.gitCommitMessage =
       generatorPlugin.getGitMessage() || context.config.gitCommitMessage;
   }
@@ -144,7 +141,6 @@ export const handleTemplateFile = async (
       'devDependencies.@types/jest': '^26.0.9',
       'devDependencies.@types/node': '^14',
       'devDependencies.@types/react': '^17',
-      'devDependencies.@types/react-dom': '^17',
     };
 
     await jsonAPI.update(
@@ -170,17 +166,6 @@ export const handleTemplateFile = async (
       resourceKey =>
         resourceKey
           .replace('templates/js-template/', projectPath)
-          .replace('.handlebars', ''),
-    );
-  }
-
-  if (!isMonorepoSubProject && packageManager === PackageManager.Pnpm) {
-    await appApi.forgeTemplate(
-      'templates/pnpm-template/**/*',
-      undefined,
-      resourceKey =>
-        resourceKey
-          .replace('templates/pnpm-template/', projectPath)
           .replace('.handlebars', ''),
     );
   }
@@ -233,11 +218,10 @@ export const handleTemplateFile = async (
   return { projectPath };
 };
 
-// eslint-disable-next-line max-statements
 export default async (context: GeneratorContext, generator: GeneratorCore) => {
   const appApi = new AppAPI(context, generator);
 
-  const { locale, isSubGenerator } = context.config;
+  const { locale, isSubGenerator, successInfo } = context.config;
   i18n.changeLanguage({ locale });
   commonI18n.changeLanguage({ locale });
   utilsI18n.changeLanguage({ locale });
@@ -282,9 +266,10 @@ export default async (context: GeneratorContext, generator: GeneratorCore) => {
   }
 
   appApi.showSuccessInfo(
-    i18n.t(localeKeys.success, {
-      packageManager: getPackageManagerText(context.config.packageManager),
-    }),
+    successInfo ||
+      i18n.t(localeKeys.success, {
+        packageManager: getPackageManagerText(context.config.packageManager),
+      }),
   );
 
   generator.logger.debug(`forge @modern-js/module-generator succeed `);

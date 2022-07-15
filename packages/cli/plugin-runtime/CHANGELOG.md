@@ -1,5 +1,237 @@
 # @modern-js/runtime
 
+## 1.3.5
+
+### Patch Changes
+
+- 8d0f1b9: feat: rumtime config types
+  feat: 补充 runtime 配置类型
+- Updated dependencies [33cebd2]
+  - @modern-js/plugin-ssr@1.5.0
+  - @modern-js/plugin-router@1.2.16
+  - @modern-js/plugin-state@1.2.10
+  - @modern-js/runtime-core@1.5.3
+  - @modern-js/utils@1.7.12
+
+## 1.3.4
+
+### Patch Changes
+
+- 3050acc: add styled-components alias
+- Updated dependencies [77a8e9e]
+- Updated dependencies [43b2224]
+- Updated dependencies [dc37349]
+- Updated dependencies [77a8e9e]
+- Updated dependencies [f29e9ba]
+- Updated dependencies [2dacc89]
+- Updated dependencies [a90bc96]
+  - @modern-js/bff-runtime@1.3.0
+  - @modern-js/plugin-ssr@1.4.6
+  - @modern-js/runtime-core@1.5.2
+  - @modern-js/plugin-router@1.2.16
+  - @modern-js/create-request@1.3.0
+  - @modern-js/utils@1.7.9
+  - @modern-js/plugin-state@1.2.10
+
+## 1.3.3
+
+### Patch Changes
+
+- 8d0eb81f5: add styled-components alias
+
+## 1.3.2
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+- Updated dependencies [a1198d509]
+  - @modern-js/plugin-router@1.2.15
+  - @modern-js/plugin-ssr@1.4.5
+  - @modern-js/plugin-state@1.2.10
+  - @modern-js/runtime-core@1.4.9
+  - @modern-js/bff-runtime@1.2.4
+  - @modern-js/create-request@1.2.11
+
+## 1.3.1
+
+### Patch Changes
+
+- 37250cb8f: feat: supply `AppConfig` types
+- Updated dependencies [6c8ab42dd]
+- Updated dependencies [808baede3]
+- Updated dependencies [37250cb8f]
+- Updated dependencies [fc43fef39]
+- Updated dependencies [a204922e8]
+  - @modern-js/plugin-ssr@1.4.4
+  - @modern-js/runtime-core@1.4.8
+  - @modern-js/plugin-state@1.2.9
+  - @modern-js/plugin-router@1.2.14
+
+## 1.3.0
+
+### Minor Changes
+
+- a9f5d170c: fix: @modern-js/runtime/model effects type error
+
+### Patch Changes
+
+- d32f35134: chore: add modern/jest/eslint/ts config files to .npmignore
+- Updated dependencies [d32f35134]
+- Updated dependencies [6ae4a34ae]
+- Updated dependencies [97086dde8]
+- Updated dependencies [97086dde8]
+- Updated dependencies [b80229c79]
+- Updated dependencies [5bfb57321]
+- Updated dependencies [948cc4436]
+  - @modern-js/plugin-router@1.2.14
+  - @modern-js/plugin-state@1.2.7
+  - @modern-js/runtime-core@1.4.6
+  - @modern-js/bff-runtime@1.2.3
+  - @modern-js/create-request@1.2.8
+  - @modern-js/utils@1.7.3
+  - @modern-js/plugin-ssr@1.3.2
+
+## 1.2.9
+
+### Patch Changes
+
+- 69a728375: fix: remove exports.jsnext:source after publish
+- Updated dependencies [cd7346b0d]
+- Updated dependencies [0e0537005]
+- Updated dependencies [69a728375]
+- Updated dependencies [0f86e133b]
+- Updated dependencies [b5943b029]
+  - @modern-js/runtime-core@1.4.5
+  - @modern-js/utils@1.7.2
+  - @modern-js/plugin-ssr@1.3.1
+  - @modern-js/plugin-router@1.2.13
+  - @modern-js/create-request@1.2.7
+  - @modern-js/plugin-state@1.2.6
+
+## 1.2.7
+
+### Patch Changes
+
+- 6c1438d2: fix: missing peer deps warnings
+- 123e432d: uglify ssr bundle for treeshaking
+- Updated dependencies [2d155c4c]
+- Updated dependencies [a0475f1a]
+- Updated dependencies [123e432d]
+- Updated dependencies [6c1438d2]
+- Updated dependencies [e5a9b26d]
+- Updated dependencies [0b26b93b]
+- Updated dependencies [123e432d]
+- Updated dependencies [f9f66ef9]
+- Updated dependencies [592edabc]
+- Updated dependencies [895fa0ff]
+- Updated dependencies [3578913e]
+- Updated dependencies [0fccff68]
+- Updated dependencies [1c3beab3]
+  - @modern-js/utils@1.6.0
+  - @modern-js/plugin-ssr@1.2.8
+  - @modern-js/plugin-state@1.2.5
+  - @modern-js/plugin-router@1.2.11
+  - @modern-js/runtime-core@1.4.3
+  - @modern-js/create-request@1.2.5
+
+## 1.2.6
+
+### Patch Changes
+
+- 6cffe99d: chore:
+  remove react eslint rules for `modern-js` rule set.
+  add .eslintrc for each package to speed up linting
+- 04ae5262: chore: bump @modern-js/utils to v1.4.1 in dependencies
+- 60f7d8bf: feat: add tests dir to npmignore
+- Updated dependencies [b8599d09]
+- Updated dependencies [6cffe99d]
+- Updated dependencies [04ae5262]
+- Updated dependencies [60f7d8bf]
+- Updated dependencies [e4cec1ce]
+- Updated dependencies [3bf4f8b0]
+  - @modern-js/utils@1.5.0
+  - @modern-js/plugin-router@1.2.10
+  - @modern-js/plugin-state@1.2.4
+  - @modern-js/runtime-core@1.4.2
+  - @modern-js/bff-runtime@1.2.2
+  - @modern-js/create-request@1.2.4
+  - @modern-js/plugin-ssr@1.2.7
+
+## 1.2.5
+
+### Patch Changes
+
+- bebb39b6: chore: improve devDependencies and peerDependencies
+- ff73a5cc: fix style-component bugs
+- Updated dependencies [bebb39b6]
+- Updated dependencies [132f7b53]
+- Updated dependencies [c4a7e4a3]
+- Updated dependencies [ff73a5cc]
+- Updated dependencies [9d4a005b]
+  - @modern-js/plugin-router@1.2.8
+  - @modern-js/plugin-ssr@1.2.5
+  - @modern-js/plugin-state@1.2.3
+  - @modern-js/utils@1.3.7
+
+## 1.2.4
+
+### Patch Changes
+
+- 94d02b35: feat(plugin-runtime): convert to new plugin
+- 808cec13: fix(plugin-runtime): fix usePlugins error
+- 681a1ff9: feat: remove unnecessary peerDependencies
+- Updated dependencies [c2046f37]
+- Updated dependencies [a2261fed]
+- Updated dependencies [cee0efcc]
+- Updated dependencies [94d02b35]
+- Updated dependencies [57e8ce98]
+- Updated dependencies [e31ce644]
+- Updated dependencies [681a1ff9]
+- Updated dependencies [e8bbc315]
+  - @modern-js/utils@1.3.6
+  - @modern-js/runtime-core@1.4.0
+  - @modern-js/plugin-router@1.2.6
+  - @modern-js/plugin-state@1.2.2
+  - @modern-js/plugin-ssr@1.2.4
+
+## 1.2.3
+
+### Patch Changes
+
+- 6891e4c2: add theme token some config logic
+- 0cd8b592: fix: runtime head and loadable type not found
+- Updated dependencies [b376c8d6]
+- Updated dependencies [735b2a81]
+- Updated dependencies [e62c4efd]
+- Updated dependencies [5ed05e65]
+- Updated dependencies [735b2a81]
+- Updated dependencies [e2a8233f]
+  - @modern-js/core@1.4.2
+  - @modern-js/plugin-ssr@1.2.2
+  - @modern-js/runtime-core@1.2.3
+
+## 1.2.2
+
+### Patch Changes
+
+- d099e5c5: fix error when modify modern.config.js
+- 24f616ca: feat: support custom meta info
+- Updated dependencies [816fd721]
+- Updated dependencies [d9cc5ea9]
+- Updated dependencies [bfbea9a7]
+- Updated dependencies [bd819a8d]
+- Updated dependencies [ec4dbffb]
+- Updated dependencies [d099e5c5]
+- Updated dependencies [bada2879]
+- Updated dependencies [24f616ca]
+- Updated dependencies [bd819a8d]
+- Updated dependencies [272cab15]
+  - @modern-js/plugin-ssr@1.2.1
+  - @modern-js/core@1.4.0
+  - @modern-js/plugin-router@1.2.2
+  - @modern-js/runtime-core@1.2.2
+  - @modern-js/utils@1.3.0
+
 ## 1.2.1
 
 ### Patch Changes

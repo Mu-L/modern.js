@@ -16,7 +16,6 @@ export const MWAActionTypes = [
 ];
 
 export const MWAActionFunctions = [
-  ActionFunction.UnBundle,
   ActionFunction.TailwindCSS,
   ActionFunction.Less,
   ActionFunction.Sass,
@@ -31,6 +30,7 @@ export const MWAActionFunctions = [
   // ActionFunction.Doc,
   ActionFunction.Polyfill,
   ActionFunction.Deploy,
+  ActionFunction.Proxy,
 ];
 export const MWAActionElements = [ActionElement.Entry, ActionElement.Server];
 export const MWAActionReactors = [ActionRefactor.BFFToApp];
@@ -77,13 +77,13 @@ export const MWANewActionSchema: Schema = {
 export const MWAActionFunctionsDevDependencies: Partial<
   Record<ActionFunction, string>
 > = {
-  [ActionFunction.UnBundle]: '@modern-js/plugin-unbundle',
   [ActionFunction.TailwindCSS]: '@modern-js/plugin-tailwindcss',
   [ActionFunction.Test]: '@modern-js/plugin-testing',
   [ActionFunction.E2ETest]: '@modern-js/plugin-e2e',
   [ActionFunction.Doc]: '@modern-js/plugin-docsite',
   [ActionFunction.Electron]: '@modern-js/plugin-electron',
   [ActionFunction.Storybook]: '@modern-js/plugin-storybook',
+  [ActionFunction.Proxy]: '@modern-js/plugin-proxy',
 };
 
 export const MWAActionFunctionsDependencies: Partial<
@@ -96,13 +96,13 @@ export const MWAActionFunctionsDependencies: Partial<
   [ActionFunction.I18n]: '@modern-js/plugin-i18n',
   [ActionFunction.SSG]: '@modern-js/plugin-ssg',
   [ActionFunction.Polyfill]: '@modern-js/plugin-polyfill',
+  [ActionFunction.TailwindCSS]: 'tailwindcss',
 };
 
 export const MWAActionFunctionsAppendTypeContent: Partial<
   Record<ActionFunction, string>
 > = {
-  [ActionFunction.Test]: `/// <reference types='@modern-js/plugin-testing/type' />`,
-  [ActionFunction.MicroFrontend]: `/// <reference types='@modern-js/plugin-garfish/type' />`,
+  [ActionFunction.MicroFrontend]: `/// <reference types='@modern-js/plugin-garfish/types' />`,
 };
 
 export const MWANewActionGenerators: Record<
@@ -114,7 +114,6 @@ export const MWANewActionGenerators: Record<
     [ActionElement.Server]: '@modern-js/server-generator',
   },
   [ActionType.Function]: {
-    [ActionFunction.UnBundle]: '@modern-js/unbundle-generator',
     [ActionFunction.TailwindCSS]: '@modern-js/tailwindcss-generator',
     [ActionFunction.Less]: '@modern-js/dependence-generator',
     [ActionFunction.Sass]: '@modern-js/dependence-generator',
@@ -129,6 +128,7 @@ export const MWANewActionGenerators: Record<
     [ActionFunction.SSG]: '@modern-js/ssg-generator',
     [ActionFunction.Polyfill]: '@modern-js/dependence-generator',
     [ActionFunction.Deploy]: '@modern-js/cloud-deploy-generator',
+    [ActionFunction.Proxy]: '@modern-js/dependence-generator',
   },
   [ActionType.Refactor]: {
     [ActionRefactor.BFFToApp]: '@modern-js/bff-refactor-generator',

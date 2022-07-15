@@ -1,5 +1,106 @@
 # @modern-js/plugin-esbuild
 
+## 1.4.1
+
+### Patch Changes
+
+- a1198d509: feat: bump babel 7.18.0
+
+## 1.4.0
+
+### Minor Changes
+
+- f66fa0e98: feat: support tools.webpackChain config
+
+### Patch Changes
+
+- 1dfe08fcd: feat(webpack): add CHAIN_ID constants for webpack chain
+- Updated dependencies [33de0f7ec]
+  - @modern-js/utils@1.7.5
+
+## 1.3.2
+
+### Patch Changes
+
+- d32f35134: chore: add modern/jest/eslint/ts config files to .npmignore
+- Updated dependencies [d32f35134]
+- Updated dependencies [6ae4a34ae]
+- Updated dependencies [b80229c79]
+- Updated dependencies [948cc4436]
+  - @modern-js/utils@1.7.3
+
+## 1.3.1
+
+### Patch Changes
+
+- 69a728375: fix: remove exports.jsnext:source after publish
+- Updated dependencies [cd7346b0d]
+- Updated dependencies [69a728375]
+  - @modern-js/utils@1.7.2
+
+## 1.3.0
+
+### Minor Changes
+
+- 0ee4bb4e: feat: prebundle webpack loaders and plugins
+
+### Patch Changes
+
+- Updated dependencies [0ee4bb4e]
+- Updated dependencies [6fa74d5f]
+  - @modern-js/utils@1.7.0
+
+## 1.2.5
+
+### Patch Changes
+
+- 6c1438d2: fix: missing peer deps warnings
+- 883adf06: fix(plugin-esbuild): no need to compatible with webpack 4
+- Updated dependencies [2d155c4c]
+- Updated dependencies [123e432d]
+- Updated dependencies [e5a9b26d]
+- Updated dependencies [0b26b93b]
+- Updated dependencies [123e432d]
+- Updated dependencies [f9f66ef9]
+- Updated dependencies [592edabc]
+- Updated dependencies [895fa0ff]
+- Updated dependencies [3578913e]
+- Updated dependencies [1c3beab3]
+  - @modern-js/utils@1.6.0
+
+## 1.2.4
+
+### Patch Changes
+
+- 6cffe99d: chore:
+  remove react eslint rules for `modern-js` rule set.
+  add .eslintrc for each package to speed up linting
+- 04ae5262: chore: bump @modern-js/utils to v1.4.1 in dependencies
+- 60f7d8bf: feat: add tests dir to npmignore
+- e4cec1ce: types: fix config hook type
+- Updated dependencies [b8599d09]
+- Updated dependencies [60f7d8bf]
+- Updated dependencies [3bf4f8b0]
+  - @modern-js/utils@1.5.0
+
+## 1.2.3
+
+### Patch Changes
+
+- bebb39b6: chore: improve devDependencies and peerDependencies
+- 6cff93dc: chore: bump webpack and esbuild version
+- Updated dependencies [132f7b53]
+  - @modern-js/utils@1.3.7
+
+## 1.2.2
+
+### Patch Changes
+
+- 61e3f623: feat: convert to new plugin
+- 681a1ff9: feat: remove unnecessary peerDependencies
+- Updated dependencies [c2046f37]
+  - @modern-js/utils@1.3.6
+
 ## 1.2.1
 
 ### Patch Changes

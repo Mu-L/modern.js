@@ -1,5 +1,58 @@
 # @modern-js/electron-generator
 
+## 1.3.5
+
+### Patch Changes
+
+- 74e74ee: feat: update codesmith json api version
+
+  feat: 升级 `@modern-js/codesmith-api-json` 版本
+
+## 1.3.4
+
+### Patch Changes
+
+- 341bb42: feat: bump codesmith package version
+
+## 1.3.3
+
+### Patch Changes
+
+- 52008db8f: update electron-builder version to fix MacOS 12.3 python path
+- a1198d509: feat: bump babel 7.18.0
+- c7e38b4e6: feat: upgrade codesmith pkg version
+
+## 1.3.2
+
+### Patch Changes
+
+- 6b0bb5e3b: feat: bump codesmith version
+
+## 1.3.1
+
+### Patch Changes
+
+- 895fa0ff: chore: using "workspace:\*" in devDependencies
+
+## 1.3.0
+
+### Minor Changes
+
+- a4330c73: fix: electron config type && electron generator template
+- 2b12032c: feat: upgrade csmith tools
+
+### Patch Changes
+
+- 6cffe99d: chore:
+  remove react eslint rules for `modern-js` rule set.
+  add .eslintrc for each package to speed up linting
+
+## 1.2.2
+
+### Patch Changes
+
+- 6668a1bf: feat: upgrade @modern-js/codesmith-api-app version
+
 ## 1.2.1
 
 ### Patch Changes

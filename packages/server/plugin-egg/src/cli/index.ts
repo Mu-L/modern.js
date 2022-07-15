@@ -1,17 +1,18 @@
 import * as path from 'path';
-import { useAppContext, createPlugin } from '@modern-js/core';
+import type { CliPlugin } from '@modern-js/core';
 import { createRuntimeExportsUtils, fs } from '@modern-js/utils';
+import { getRelativeRuntimePath } from '@modern-js/adapter-helpers';
 
 const PACKAGE_JSON = 'package.json';
 
-export default createPlugin(
-  () => {
+export default (): CliPlugin => ({
+  name: '@modern-js/plugin-egg',
+  setup: api => {
     let bffExportsUtils: any;
+    const { useAppContext } = api;
     const runtimeModulePath = path.resolve(__dirname, '../runtime');
-
     return {
       config() {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
         const appContext = useAppContext();
         const { appDirectory } = appContext;
         bffExportsUtils = createRuntimeExportsUtils(
@@ -21,32 +22,30 @@ export default createPlugin(
 
         const serverRuntimePath = bffExportsUtils.getPath();
 
-        // Look up one level, because the artifacts after build have dist directories
-        let relativeRuntimePath = path.join(
-          '../',
-          path.relative(appDirectory, serverRuntimePath),
+        const relativeRuntimePath = getRelativeRuntimePath(
+          appDirectory,
+          serverRuntimePath,
         );
 
-        if (
-          process.env.NODE_ENV === 'development' ||
-          process.env.NODE_ENV === 'test'
-        ) {
-          relativeRuntimePath = `./${path.relative(
-            appDirectory,
-            serverRuntimePath,
-          )}`;
-        }
-
-        return {
-          source: {
-            alias: {
-              '@modern-js/runtime/server': relativeRuntimePath,
+        if (process.env.NODE_ENV === 'production') {
+          return {
+            source: {
+              alias: {
+                '@modern-js/runtime/server': relativeRuntimePath,
+              },
             },
-          },
-        };
+          };
+        } else {
+          return {
+            source: {
+              alias: {
+                '@modern-js/runtime/server': serverRuntimePath,
+              },
+            },
+          };
+        }
       },
       addRuntimeExports(input) {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
         const { appDirectory } = useAppContext();
         const runtimePath = require.resolve(`@modern-js/runtime`, {
           paths: [appDirectory],
@@ -77,7 +76,6 @@ export default createPlugin(
         return input;
       },
       async afterBuild() {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
         const { appDirectory, distDirectory } = useAppContext();
 
         const pkgJson = path.join(appDirectory, PACKAGE_JSON);
@@ -85,5 +83,4 @@ export default createPlugin(
       },
     };
   },
-  { name: '@modern-js/plugin-egg' },
-);
+});

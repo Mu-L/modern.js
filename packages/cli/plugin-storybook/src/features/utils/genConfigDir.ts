@@ -1,9 +1,8 @@
 import path from 'path';
 import type { NormalizedConfig } from '@modern-js/core';
-import { Import, fs, logger } from '@modern-js/utils';
-import { transformSync } from '@modern-js/esbuild-compiler';
+import { Import, fs, glob, logger } from '@modern-js/utils';
+import { transformSync } from 'esbuild';
 
-const glob: typeof import('glob') = Import.lazy('glob', require);
 const constants: typeof import('../constants') = Import.lazy(
   '../constants',
   require,
@@ -25,22 +24,22 @@ const defaultOptions = {
   isTsProject: false,
 };
 
-const getConfigDir = (appDir: string) => {
+export const getConfigDir = (appDir: string) => {
   const storybookConfigsPath = path.join(constants.CURRENT_PKG_PATH, 'configs');
   fs.ensureDirSync(storybookConfigsPath);
-  const projectConfigtPath = path.join(
+  const projectConfigPath = path.join(
     storybookConfigsPath,
     path.basename(appDir),
   );
-  fs.ensureDirSync(projectConfigtPath);
-  return projectConfigtPath;
+  fs.ensureDirSync(projectConfigPath);
+  return projectConfigPath;
 };
 
 export const generateConfig = async (
   appDirectory: string,
-  customeOptions: Partial<GenerateOptions> = {},
+  customOptions: Partial<GenerateOptions> = {},
 ) => {
-  const options = { ...defaultOptions, ...customeOptions };
+  const options = { ...defaultOptions, ...customOptions };
   const {
     disableTsChecker,
     preview,

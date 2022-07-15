@@ -48,6 +48,23 @@ export const SERVER_DIR = 'server';
 export const SHARED_DIR = 'shared';
 
 /**
+ * Modern.config.ts cached dir
+ */
+export const CONFIG_CACHE_DIR = './node_modules/.cache/node-bundle-require';
+
+export const CONFIG_FILE_EXTENSIONS = ['.js', '.ts', '.ejs', '.mjs'];
+
+/**
+ * Serialized config path
+ */
+export const OUTPUT_CONFIG_FILE = 'modern.config.json';
+
+/**
+ * Default server config basename
+ */
+export const DEFAULT_SERVER_CONFIG = 'modern.server-runtime.config';
+
+/**
  * Internal plugins that work as soon as they are installed.
  */
 export const INTERNAL_PLUGINS: {
@@ -87,7 +104,6 @@ export const INTERNAL_PLUGINS: {
     server: '@modern-js/plugin-nest/server',
   },
   '@modern-js/plugin-unbundle': { cli: '@modern-js/plugin-unbundle' },
-  '@modern-js/plugin-server-build': { cli: '@modern-js/plugin-server-build' },
   '@modern-js/plugin-server': {
     cli: '@modern-js/plugin-server/cli',
     server: '@modern-js/plugin-server/server',
@@ -111,7 +127,11 @@ export const INTERNAL_PLUGINS: {
   '@modern-js/plugin-multiprocess': {
     cli: '@modern-js/plugin-multiprocess/cli',
   },
+  // TODO: Maybe can remove it
   '@modern-js/plugin-nocode': { cli: '@modern-js/plugin-nocode/cli' },
+  '@modern-js/plugin-design-token': {
+    cli: '@modern-js/plugin-design-token/cli',
+  },
 };
 
 /**
@@ -175,10 +195,6 @@ export const PLUGIN_SCHEMAS = {
       target: 'tools.tailwindcss',
       schema: { typeof: ['object', 'function'] },
     },
-    {
-      target: 'source.designSystem',
-      schema: { typeof: ['object'] },
-    },
   ],
   '@modern-js/plugin-proxy': [
     {
@@ -188,12 +204,23 @@ export const PLUGIN_SCHEMAS = {
   ],
   '@modern-js/plugin-unbundle': [
     {
-      target: 'source.disableAutoImportStyle',
+      target: 'output.disableAutoImportStyle',
       schema: { type: 'boolean' },
     },
     {
-      target: 'server.https',
-      schema: { type: 'boolean' },
+      target: 'dev.unbundle',
+      schema: {
+        type: 'object',
+        properties: {
+          ignore: {
+            type: ['string', 'array'],
+            items: { type: 'string' },
+          },
+          ignoreModuleCache: { type: 'boolean' },
+          clearPdnCache: { type: 'boolean' },
+          pdnHost: { type: 'string' },
+        },
+      },
     },
   ],
   '@modern-js/plugin-ssg': [
@@ -208,16 +235,21 @@ export const PLUGIN_SCHEMAS = {
       },
     },
   ],
-  '@modern-js/plugin-ssr': [
-    {
-      target: 'runtime.ssr',
-      schema: { type: ['boolean', 'object'] },
-    },
-  ],
   '@modern-js/plugin-state': [
     {
       target: 'runtime.state',
       schema: { type: ['boolean', 'object'] },
+    },
+  ],
+  '@modern-js/plugin-design-token': [
+    // Legacy Features
+    {
+      target: 'source.designSystem',
+      schema: { typeof: ['object'] },
+    },
+    {
+      target: 'source.designSystem.supportStyledComponents',
+      schema: { type: ['boolean'] },
     },
   ],
   '@modern-js/plugin-router': [
@@ -239,11 +271,15 @@ export const PLUGIN_SCHEMAS = {
   '@modern-js/plugin-garfish': [
     {
       target: 'runtime.masterApp',
-      schema: { type: ['object'] },
+      schema: { type: ['boolean', 'object'] },
     },
     {
       target: 'dev.withMasterApp',
       schema: { type: ['object'] },
+    },
+    {
+      target: 'deploy.microFrontend',
+      schema: { type: ['boolean', 'object'] },
     },
   ],
   '@modern-js/plugin-nocode': [],

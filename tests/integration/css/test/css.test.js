@@ -1,11 +1,9 @@
 /* eslint-disable no-undef */
 const path = require('path');
-const fs = require('fs');
 const { resolve } = require('path');
-const { readdirSync, readFileSync } = require('fs-extra');
+const { fs } = require('@modern-js/utils');
 const {
   modernBuild,
-  installDeps,
   clearBuildDist,
   getPort,
   launchApp,
@@ -14,11 +12,9 @@ const {
 
 const { getCssFiles, readCssFile, copyModules } = require('./utils');
 
-const fixtures = path.resolve(__dirname, '../fixtures');
+const { readdirSync, readFileSync } = fs;
 
-beforeAll(async () => {
-  await installDeps(fixtures);
-});
+const fixtures = path.resolve(__dirname, '../fixtures');
 
 afterAll(() => {
   clearBuildDist(fixtures);
@@ -242,7 +238,7 @@ describe('test css support', () => {
     });
   });
 
-  describe('css souce map', () => {
+  describe('css source map', () => {
     const getCssMaps = appDir =>
       readdirSync(path.resolve(appDir, 'dist/static/css')).filter(filepath =>
         /\.css\.map$/.test(filepath),
@@ -267,9 +263,10 @@ describe('test css support', () => {
 
       expect(cssMaps.length).toBe(0);
     });
-    it(`should generate css ts decalration file`, async () => {
+    it(`should generate css ts declaration file`, async () => {
       const appDir = path.resolve(fixtures, 'css-ts-declaration');
-      await modernBuild(appDir);
+      const port = await getPort();
+      const app = await launchApp(appDir, port);
 
       const generatedDTSFile = path.resolve(
         appDir,
@@ -281,6 +278,7 @@ describe('test css support', () => {
       );
 
       fs.unlinkSync(generatedDTSFile);
+      await killApp(app);
     });
   });
 });
@@ -312,8 +310,49 @@ describe('less-support', () => {
         '#header{height:20px;width:10px}',
       );
     });
+
     it(`should emitted multi css file`, async () => {
       const appDir = resolve(fixtures, 'multi-less');
+
+      await modernBuild(appDir);
+
+      const cssFiles = getCssFiles(appDir);
+
+      expect(cssFiles.length).toBe(2);
+
+      expect(
+        readCssFile(
+          appDir,
+          cssFiles.find(name => /a\.[a-z\d]+\.css$/.test(name)),
+        ),
+      ).toContain('#a{width:10px}');
+
+      expect(
+        readCssFile(
+          appDir,
+          cssFiles.find(name => /b\.[a-z\d]+\.css$/.test(name)),
+        ),
+      ).toContain('#b{height:20px}');
+    });
+  });
+
+  describe('base sass support', () => {
+    it(`should emitted single css file`, async () => {
+      const appDir = resolve(fixtures, 'single-sass');
+
+      await modernBuild(appDir);
+
+      const cssFiles = getCssFiles(appDir);
+
+      expect(cssFiles.length).toBe(1);
+
+      expect(readCssFile(appDir, cssFiles[0])).toContain(
+        '#header{height:20px;width:10px}',
+      );
+    });
+
+    it(`should emitted multi css file`, async () => {
+      const appDir = resolve(fixtures, 'multi-sass');
 
       await modernBuild(appDir);
 

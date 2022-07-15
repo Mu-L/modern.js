@@ -18,11 +18,12 @@ export const getRouteName = (
   }
 
   const lambdaDir = getLambdaDir(apiDir);
+  // TODO: 这里应该加缓存
   const allApis = getAllAPIFiles(lambdaDir);
 
   if (resourcePath.startsWith(lambdaDir)) {
     if (!allApis.includes(resourcePath)) {
-      return Err('Invalid API defination file');
+      return Err('Invalid API definition file');
     }
 
     const absoluteName = resourcePath.split('.').slice(0, -1).join('.');

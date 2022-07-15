@@ -1,8 +1,7 @@
 import * as path from 'path';
 import { FileSystem, JsonFile, Sort } from '@rushstack/node-core-library';
 import { getGitHashForFiles } from '@rushstack/package-deps-hash';
-import globby from 'globby';
-// import type { GlobbyOptions } from 'globby';
+import { globby } from '@modern-js/utils';
 import md5 from 'md5';
 import { IProjectNode } from './get-projects';
 
@@ -49,13 +48,13 @@ export const checkProjectChangeByGit = async (
     });
   }
 
-  const monorepoProjecstHashJson = JsonFile.load(monorepoGitMemory);
-  const changed = monorepoProjecstHashJson[project.name] !== currentProjectHash;
+  const monorepoProjectHashJson = JsonFile.load(monorepoGitMemory);
+  const changed = monorepoProjectHashJson[project.name] !== currentProjectHash;
   if (changed) {
-    monorepoProjecstHashJson[project.name] = currentProjectHash;
+    monorepoProjectHashJson[project.name] = currentProjectHash;
     FileSystem.writeFile(
       monorepoGitMemory,
-      JsonFile.stringify(monorepoProjecstHashJson),
+      JsonFile.stringify(monorepoProjectHashJson),
       { ensureFolderExists: true },
     );
   }

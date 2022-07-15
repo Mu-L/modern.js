@@ -1,5 +1,7 @@
+/* eslint-disable no-inner-declarations */
+
 import nodePath from 'path';
-import fs from 'fs-extra';
+import { fs } from '@modern-js/utils';
 import * as babel from '@babel/core';
 import type { NodePath } from '@babel/core';
 import type { Binding, Visitor } from '@babel/traverse';
@@ -21,7 +23,7 @@ const cache = new Map<string, string[]>();
 
 /**
  * parse export variable names from commonjs or umd spec
- * @param fileLoc the aboluste path for a code file
+ * @param fileLoc the absolute path for a code file
  */
 export const parseExportVariableNamesFromCJSorUMDFile = async (
   fileLoc: string,
@@ -76,8 +78,7 @@ async function doParse(ctx: ParseContext, fileLoc: string) {
     throw new Error('parseExportVariableNames failed');
   }
   traverse(
-    // TODO: error TS2345: Argument of type 'File | Program' is not assignable to parameter of type 'Node | Node[] | null | undefined'
-    ast as any,
+    ast,
     visitorCreator({
       testUMD: true,
     }),
@@ -239,7 +240,7 @@ async function doParse(ctx: ParseContext, fileLoc: string) {
                     if (t.isIdentifier(firstParam)) {
                       aliasName = firstParam.name;
                       /**
-                       * 含有 xxx === typeof exports && xxx === typoef module,
+                       * 含有 xxx === typeof exports && xxx === typeof module,
                        * (可以 == 或者 ===, && 顺序可呼唤, === 顺序可互换)
                        * 且第一个参数是 this, 第二个是 factory 函数
                        * 以上都符合, 则认为是 UMD 的 wrapper 函数
@@ -254,12 +255,12 @@ async function doParse(ctx: ParseContext, fileLoc: string) {
             if (isUMD) {
               const umdFuncExp = args[1];
               if (t.isFunctionExpression(umdFuncExp)) {
-                type BlockStatmentNodePath = NodePath<
+                type BlockStatementNodePath = NodePath<
                   Extract<t.BlockStatement, { type: any }>
                 >;
                 const bodyPath = path.get(
                   'arguments.1.body',
-                ) as BlockStatmentNodePath;
+                ) as BlockStatementNodePath;
                 if (bodyPath) {
                   bodyPath.traverse(
                     visitorCreator({
@@ -333,8 +334,7 @@ export const parseExportInfoFromESMCode = async (code: string) => {
   const addToDefaultExportAssignedKeySet = (k: string) => {
     addToSet(defaultExportAssignedKeySet, k);
   };
-  // TODO: error TS2345: Argument of type 'File | Program' is not assignable to parameter of type 'Node | Node[] | null | undefined'
-  babel.traverse(ast as any, {
+  babel.traverse(ast, {
     ExportDefaultDeclaration: path => {
       hasDefaultExport = true;
       const { declaration } = path.node;
@@ -425,14 +425,12 @@ export const parseExportInfoFromESMCode = async (code: string) => {
         // 来自其他模块的 reexport
         // 仅记录，未能处理
         for (const spec of path.node.specifiers) {
-          if (t.isExportSpecifier(spec)) {
-            if (t.isIdentifier(spec.exported)) {
-              namedExportsOutsideCode.add(spec.exported.name);
+          if (t.isExportSpecifier(spec) && t.isIdentifier(spec.exported)) {
+            namedExportsOutsideCode.add(spec.exported.name);
 
-              // export { default } from 'foo';
-              if (spec.exported.name === 'default') {
-                hasDefaultExport = true;
-              }
+            // export { default } from 'foo';
+            if (spec.exported.name === 'default') {
+              hasDefaultExport = true;
             }
           }
         }
@@ -479,3 +477,5 @@ export const parseExportInfoFromESMCode = async (code: string) => {
     namedExportAlias,
   };
 };
+
+/* eslint-enable no-inner-declarations */

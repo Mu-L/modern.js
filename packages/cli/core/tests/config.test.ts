@@ -1,7 +1,7 @@
 import path from 'path';
 // import os from 'os';
-import { isDev, getPort } from '@modern-js/utils';
-import { resolveConfig } from '../src/config';
+import { isDev, getPort, DEFAULT_SERVER_CONFIG } from '@modern-js/utils';
+import { resolveConfig, addServerConfigToDeps } from '../src/config';
 import {
   cli,
   loadUserConfig,
@@ -10,7 +10,6 @@ import {
   manager,
   createPlugin,
   registerHook,
-  useRunner,
 } from '../src';
 import { defaults } from '../src/config/defaults';
 
@@ -26,7 +25,7 @@ jest.mock('@modern-js/utils', () => ({
 
 describe('config', () => {
   /**
-   * Typescript Type annotations cannot be used for esbuild-jest
+   * TypeScript Type annotations cannot be used for esbuild-jest
    * test files that use jest.mock('@some/module')
    * refer to this esbuild-jest issue:
    * https://github.com/aelbore/esbuild-jest/issues/57
@@ -82,7 +81,6 @@ describe('config', () => {
     expect(manager).toBeDefined();
     expect(createPlugin).toBeDefined();
     expect(registerHook).toBeDefined();
-    expect(useRunner).toBeDefined();
   });
 
   it('initAppDir', async () => {
@@ -103,7 +101,7 @@ describe('config', () => {
     expect(resolved.server.port).toEqual(defaults.server.port);
     expect(getPort).toHaveBeenCalledWith(defaults.server.port);
 
-    // getResolvedConfig should use the value givin by getPort
+    // getResolvedConfig should use the value given by getPort
     restartWithExistingPort = -1;
     (getPort as jest.Mock).mockClear();
     (getPort as jest.Mock).mockReturnValue(1111);
@@ -133,5 +131,14 @@ describe('config', () => {
   });
 });
 
-// type TEST = Parameters<typeof resolveConfig>;
-// type TypeC = TEST[1];
+describe('addServerConfigToDeps', () => {
+  it('should add server config to deps', async () => {
+    const appDirectory = path.join(__dirname, './fixtures/index-test');
+    const deps: string[] = [];
+    await addServerConfigToDeps(deps, appDirectory, DEFAULT_SERVER_CONFIG);
+    expect(deps.length).toBe(1);
+    expect(deps[0]).toBe(
+      path.join(appDirectory, `${DEFAULT_SERVER_CONFIG}.js`),
+    );
+  });
+});
